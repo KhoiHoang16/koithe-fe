@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Colors - Chagee Style */
+    --primary: 156 42% 39%; /* #3A8C6E - Xanh ngọc bích */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 120 27% 91%; /* #E6F2E6 - Trắng ngà */
+    --secondary-foreground: 156 42% 39%;
+
+    --accent: 46 65% 59%; /* #D4AF37 - Vàng kim */
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 100% 27%; /* #8B0000 - Đỏ đô */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Neutral */
+    --background: 45 33% 97%; /* #FAF9F6 - Nền kem */
+    --foreground: 0 0% 10%; /* #1A1A1A - Đen mềm */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --muted: 0 0% 96%; /* #F5F5F5 */
+    --muted-foreground: 0 0% 47%; /* #787878 */
+    
+    --border: 0 0% 90%; /* #E6E6E6 */
+    --input: 0 0% 88%; /* #E0E0E0 */
+    --ring: 156 42% 39%; /* #3A8C6E */
+    
+    /* Radius */
+    --radius: 0.75rem; /* 12px for normal components */
+  }
+
+  .dark {
+    /* We can just keep basic dark mode values or a refined dark green */
+    --background: 156 42% 10%;
+    --foreground: 120 27% 91%;
+
+    --card: 156 42% 12%;
+    --card-foreground: 120 27% 91%;
+
+    --popover: 156 42% 12%;
+    --popover-foreground: 120 27% 91%;
+
+    --primary: 156 42% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 156 42% 16%;
+    --secondary-foreground: 120 27% 91%;
+
+    --muted: 156 42% 16%;
+    --muted-foreground: 120 20% 65%;
+
+    --accent: 46 65% 59%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 156 42% 16%;
+    --input: 156 42% 16%;
+    --ring: 156 42% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground rounded-xl px-6 py-3 font-medium 
+           hover:bg-primary/90 transition-all duration-200 
+           active:scale-[0.98];
+  }
+  
+  .card {
+    @apply bg-card text-card-foreground rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] transition-shadow duration-200;
+  }
+  
+  .badge-gold {
+    @apply bg-accent/20 text-accent 
+           rounded-full px-3 py-1 text-xs font-medium;
+  }
+}
+
+@layer utilities {
+  /* Skeleton shimmer effect */
+  .skeleton {
+    @apply relative overflow-hidden bg-muted rounded-md;
+  }
+
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      hsl(var(--secondary) / 0.8) 50%,
+      transparent 75%
+    );
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] hover:-translate-y-1;
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+
+  /* Line clamp */
+  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+}
+
