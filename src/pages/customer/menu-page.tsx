@@ -15,7 +15,7 @@ export function MenuPage() {
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: categories = [], isLoading: isLoadingCategories } = useCategories();
+  const { data: categories = [] } = useCategories();
   const { data: products = [], isLoading: isLoadingProducts } = useProducts({
     danhMucId: activeCategoryId || undefined,
     search: searchQuery || undefined,
