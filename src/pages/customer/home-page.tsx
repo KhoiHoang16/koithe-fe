@@ -58,12 +58,12 @@ export function HomePage() {
         <div className="relative container mx-auto px-4 pt-24 pb-16 flex-1 flex flex-col items-center justify-center z-10 text-center">
           <div className="group flex flex-col items-center justify-center transition-transform duration-500 hover:scale-[1.02] cursor-default">
             {/* Giant KOI THÉ Wordmark */}
-            <h1 className="font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[120px] xl:text-[135px] font-bold tracking-wider leading-none text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+            <h1 className="font-sans text-6xl sm:text-7xl md:text-8xl lg:text-[120px] xl:text-[135px] font-black tracking-wider leading-none text-white drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
               KOI THÉ
             </h1>
 
             {/* Subtitle */}
-            <p className="font-serif italic text-xl sm:text-2xl md:text-3xl text-white/95 tracking-wide mt-4 sm:mt-6 drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] max-w-2xl">
+            <p className="font-sans font-medium text-xl sm:text-2xl md:text-3xl text-white/95 tracking-wide mt-4 sm:mt-6 drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)] max-w-2xl">
               Tinh Hoa Trà Đạo – Trọn Vị Nguyên Bản
             </p>
           </div>
@@ -96,7 +96,7 @@ export function HomePage() {
             {/* Right Column: Editorial Typography */}
             <div className="lg:col-span-6 flex flex-col justify-center items-start lg:items-end text-left lg:text-right lg:pr-6">
               <div className="max-w-xl">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#0F2236] mb-8 font-serif leading-tight">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#0F2236] mb-8 font-sans leading-tight">
                   VỀ CHÚNG TÔI
                 </h2>
 
@@ -114,7 +114,7 @@ export function HomePage() {
 
                 <div className="flex justify-start lg:justify-end">
                   <Link
-                    to="/menu"
+                    to="/about"
                     className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-9 py-3 text-sm font-medium text-neutral-600 hover:border-[#0F2236] hover:text-[#0F2236] hover:bg-neutral-50 transition-all duration-300 shadow-sm"
                   >
                     Tìm Hiểu Thêm
@@ -134,7 +134,7 @@ export function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
             {/* Left Column (Approx 30%): Header & Description */}
             <div className="lg:col-span-4 flex flex-col justify-center items-start">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#0F2236] mb-8 font-serif leading-tight">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#0F2236] mb-8 font-sans leading-tight">
                 SẢN PHẨM
               </h2>
               <p className="text-base sm:text-lg text-neutral-600 leading-relaxed font-light mb-10 max-w-sm">

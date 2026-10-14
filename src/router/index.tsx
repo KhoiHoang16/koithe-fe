@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { LoadingScreen } from '@/shared/components/feedback/loading-spinner';
+import { ScrollToTop } from '@/components/common/scroll-to-top';
 import { ProtectedRoute, GuestRoute } from './route-helpers';
 import * as LazyPages from './lazy-pages';
 
@@ -15,7 +16,19 @@ const withSuspense = (element: React.ReactNode) => (
   <Suspense fallback={<LoadingScreen />}>{element}</Suspense>
 );
 
+function RootLayout() {
+  return (
+    <>
+      <ScrollToTop />
+      <Outlet />
+    </>
+  );
+}
+
 export const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
   // ===================================================================
   // AUTH ROUTES (chỉ cho khách chưa đăng nhập)
   // ===================================================================
@@ -56,6 +69,7 @@ export const router = createBrowserRouter([
     element: <CustomerLayout />,
     children: [
       { path: '/', element: withSuspense(<LazyPages.HomePage />) },
+      { path: '/about', element: withSuspense(<LazyPages.AboutPage />) },
       { path: '/menu', element: withSuspense(<LazyPages.MenuPage />) },
       { path: '/menu/:productId', element: withSuspense(<LazyPages.ProductDetailPage />) },
       { path: '/cart', element: withSuspense(<LazyPages.CartPage />) },
@@ -164,10 +178,13 @@ export const router = createBrowserRouter([
   // ===================================================================
   // ERROR ROUTES
   // ===================================================================
-  { path: '/forbidden', element: withSuspense(<LazyPages.ForbiddenPage />) },
-  { path: '*', element: withSuspense(<LazyPages.NotFoundPage />) },
+      { path: '/forbidden', element: withSuspense(<LazyPages.ForbiddenPage />) },
+      { path: '*', element: withSuspense(<LazyPages.NotFoundPage />) },
+    ],
+  },
 ]);
 
 export function AppRouter() {
   return <RouterProvider router={router} />;
 }
+

@@ -22,7 +22,7 @@ export function CustomerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isHomePage = location.pathname === '/';
+  const isTransparentPage = location.pathname === '/' || location.pathname === '/about';
 
   // Smart Header states
   const [isVisible, setIsVisible] = useState(true);
@@ -31,9 +31,12 @@ export function CustomerLayout() {
   const prevScrollY = useRef(0);
 
   useEffect(() => {
-    // Khởi tạo trạng thái ban đầu
-    prevScrollY.current = window.scrollY;
-    setIsScrolled(window.scrollY > 40);
+    // Đảm bảo cuộn lên đỉnh ngay lập tức khi đổi route và khởi tạo header tại đỉnh trang
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    prevScrollY.current = 0;
+    setIsScrolled(false);
     setIsVisible(true);
 
     const handleScroll = () => {
@@ -67,8 +70,8 @@ export function CustomerLayout() {
     navigate('/login');
   };
 
-  // Header trong suốt chỉ khi: đang ở trang chủ, chưa cuộn xuống, và chuột không hover
-  const isTransparentMode = isHomePage && !isScrolled && !isHovered;
+  // Header trong suốt chỉ khi: đang ở trang chủ hoặc trang về chúng tôi, chưa cuộn xuống, và chuột không hover
+  const isTransparentMode = isTransparentPage && !isScrolled && !isHovered;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -90,7 +93,7 @@ export function CustomerLayout() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
             <div
-              className={`h-9 w-9 rounded-full flex items-center justify-center font-serif font-bold text-xs tracking-wider transition-all duration-300 ${
+              className={`h-9 w-9 rounded-full flex items-center justify-center font-sans font-bold text-xs tracking-wider transition-all duration-300 ${
                 isTransparentMode
                   ? 'bg-white/20 text-white border border-white/40 group-hover:scale-105'
                   : 'bg-primary text-primary-foreground shadow-sm group-hover:scale-105'
@@ -100,7 +103,7 @@ export function CustomerLayout() {
             </div>
             <div className="flex flex-col">
               <span
-                className={`font-serif text-lg font-bold tracking-widest leading-none transition-colors ${
+                className={`font-sans text-lg font-black tracking-widest leading-none transition-colors ${
                   isTransparentMode ? 'text-white' : 'text-primary'
                 }`}
               >
@@ -116,17 +119,17 @@ export function CustomerLayout() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation (CHAGEE Style: Logo = Home, first link is Về chúng tôi) */}
           <nav className="hidden md:flex items-center gap-8">
             <Link
-              to="/"
+              to="/about"
               className={`text-sm font-medium transition-colors ${
                 isTransparentMode
                   ? 'text-white/80 hover:text-white'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Trang chủ
+              Về chúng tôi
             </Link>
             <Link
               to="/menu"
@@ -244,9 +247,9 @@ export function CustomerLayout() {
       </header>
 
       {/* ============================================================
-          MAIN CONTENT (Trang chủ tràn viền top, các trang khác có đệm pt-16)
+          MAIN CONTENT (Trang chủ & Về chúng tôi tràn viền top, các trang khác có đệm pt-16)
           ============================================================ */}
-      <main className={`flex-1 ${isHomePage ? '' : 'pt-16'}`}>
+      <main className={`flex-1 ${isTransparentPage ? '' : 'pt-16'}`}>
         <Outlet />
       </main>
 
@@ -259,11 +262,11 @@ export function CustomerLayout() {
             {/* Brand column */}
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground font-serif font-bold text-xs flex items-center justify-center tracking-wider shadow-sm">
+                <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground font-sans font-bold text-xs flex items-center justify-center tracking-wider shadow-sm">
                   KOI
                 </div>
                 <div>
-                  <span className="font-serif text-xl font-bold tracking-widest text-[#0F2236] block leading-none">
+                  <span className="font-sans text-xl font-black tracking-widest text-[#0F2236] block leading-none">
                     KOI THÉ
                   </span>
                   <span className="text-[10px] tracking-widest uppercase text-muted-foreground block mt-1">
@@ -295,10 +298,10 @@ export function CustomerLayout() {
                 Về Chúng Tôi
               </h4>
               <ul className="space-y-2.5 text-sm text-neutral-500 font-light">
-                <li><Link to="/" className="hover:text-[#0F2236] transition-colors">Câu chuyện thương hiệu</Link></li>
-                <li><Link to="/" className="hover:text-[#0F2236] transition-colors">Hệ thống cửa hàng</Link></li>
-                <li><Link to="/" className="hover:text-[#0F2236] transition-colors">Chính sách chất lượng</Link></li>
-                <li><Link to="/" className="hover:text-[#0F2236] transition-colors">Tuyển dụng</Link></li>
+                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Câu chuyện thương hiệu</Link></li>
+                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Hệ thống cửa hàng</Link></li>
+                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Chính sách chất lượng</Link></li>
+                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Tuyển dụng</Link></li>
               </ul>
             </div>
 

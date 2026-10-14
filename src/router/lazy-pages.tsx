@@ -20,6 +20,9 @@ export const ForgotPasswordPage = lazy(() =>
 export const HomePage = lazy(() =>
   import('@/pages/customer/home-page').then((m) => ({ default: m.HomePage })),
 );
+export const AboutPage = lazy(() =>
+  import('@/pages/customer/about-page').then((m) => ({ default: m.AboutPage })),
+);
 export const MenuPage = lazy(() =>
   import('@/pages/customer/menu-page').then((m) => ({ default: m.MenuPage })),
 );
