@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { getLenis } from './smooth-scroll';
 
 /**
  * Global ScrollToTop component:
@@ -16,6 +17,10 @@ export function ScrollToTop() {
     }
 
     const resetScroll = () => {
+      const lenis = getLenis();
+      if (lenis) {
+        lenis.scrollTo(0, { immediate: true });
+      }
       window.scrollTo({
         top: 0,
         left: 0,

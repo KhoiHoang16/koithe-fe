@@ -22,7 +22,7 @@ export function CustomerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isTransparentPage = location.pathname === '/' || location.pathname === '/about';
+  const isTransparentPage = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/menu';
 
   // Smart Header states
   const [isVisible, setIsVisible] = useState(true);

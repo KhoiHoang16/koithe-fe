@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { LoadingScreen } from '@/shared/components/feedback/loading-spinner';
 import { ScrollToTop } from '@/components/common/scroll-to-top';
+import { SmoothScroll } from '@/components/common/smooth-scroll';
 import { ProtectedRoute, GuestRoute } from './route-helpers';
 import * as LazyPages from './lazy-pages';
 
@@ -20,6 +21,7 @@ function RootLayout() {
   return (
     <>
       <ScrollToTop />
+      <SmoothScroll />
       <Outlet />
     </>
   );
