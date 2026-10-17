@@ -152,12 +152,18 @@ export function ProductDetailPage() {
                   onClick={() => setSelectedVariantId(v.id)}
                   className={`p-3 rounded-xl border text-center transition-all ${
                     currentVariant.id === v.id
-                      ? 'border-primary bg-primary/10 font-bold text-primary shadow-sm'
-                      : 'border-input hover:border-muted-foreground'
+                      ? 'border-primary bg-primary text-primary-foreground font-bold shadow-sm'
+                      : 'border-input bg-card hover:border-primary/50 text-foreground'
                   }`}
                 >
                   <div className="text-sm">{v.tenBienThe}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{formatVND(v.giaBan)}</div>
+                  <div
+                    className={`text-xs mt-1 transition-colors ${
+                      currentVariant.id === v.id ? 'text-primary-foreground/90 font-medium' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {formatVND(v.giaBan)}
+                  </div>
                 </button>
               ))}
             </div>
@@ -173,7 +179,9 @@ export function ProductDetailPage() {
                   type="button"
                   onClick={() => setSugarLevel(level)}
                   className={`px-4 py-2 rounded-lg text-xs font-medium border transition-all ${
-                    sugarLevel === level ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-accent'
+                    sugarLevel === level
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm font-semibold'
+                      : 'border-input bg-card hover:border-primary/50 text-foreground'
                   }`}
                 >
                   {level}
@@ -192,7 +200,9 @@ export function ProductDetailPage() {
                   type="button"
                   onClick={() => setIceLevel(level)}
                   className={`px-4 py-2 rounded-lg text-xs font-medium border transition-all ${
-                    iceLevel === level ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-accent'
+                    iceLevel === level
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm font-semibold'
+                      : 'border-input bg-card hover:border-primary/50 text-foreground'
                   }`}
                 >
                   {level}
@@ -213,20 +223,24 @@ export function ProductDetailPage() {
                     type="button"
                     onClick={() => handleToppingToggle(topping)}
                     className={`flex items-center justify-between p-3 rounded-xl border text-left text-xs transition-all ${
-                      selected ? 'border-primary bg-primary/5 font-medium' : 'border-input hover:bg-accent/50'
+                      selected
+                        ? 'border-primary bg-primary/10 text-foreground font-medium shadow-sm'
+                        : 'border-input bg-card hover:border-primary/50 text-foreground'
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <div
-                        className={`h-4 w-4 rounded border flex items-center justify-center ${
-                          selected ? 'bg-primary border-primary text-white' : 'border-muted-foreground'
+                        className={`h-4 w-4 rounded border flex items-center justify-center transition-colors ${
+                          selected ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground'
                         }`}
                       >
-                        {selected && <Check className="h-3 w-3" />}
+                        {selected && <Check className="h-3 w-3 stroke-[3]" />}
                       </div>
                       <span>{topping.tenTopping}</span>
                     </div>
-                    <span className="text-muted-foreground font-semibold">+{formatVND(topping.giaBan)}</span>
+                    <span className={`font-semibold ${selected ? 'text-primary' : 'text-muted-foreground'}`}>
+                      +{formatVND(topping.giaBan)}
+                    </span>
                   </button>
                 );
               })}
@@ -265,7 +279,11 @@ export function ProductDetailPage() {
             </div>
 
             {/* Add to Cart Submit Button */}
-            <Button size="lg" className="w-full sm:flex-1 h-12 text-base font-semibold gap-2 btn-primary rounded-xl" onClick={handleAddToCart}>
+            <Button
+              size="lg"
+              className="w-full sm:flex-1 h-12 text-base font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-md transition-all active:scale-[0.99]"
+              onClick={handleAddToCart}
+            >
               <ShoppingBag className="h-5 w-5" />
               Thêm vào giỏ • {formatVND(totalPrice)}
             </Button>

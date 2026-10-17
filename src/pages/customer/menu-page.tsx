@@ -65,10 +65,10 @@ export function MenuPage() {
             <div className="lg:sticky lg:top-24 space-y-8">
               {/* Heading */}
               <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-[#0F2236] tracking-tight leading-tight uppercase font-sans">
+                <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-tight uppercase font-sans">
                   CÁC DÒNG<br />TRÀ CHÍNH
                 </h2>
-                <div className="w-12 h-0.5 bg-[#0F2236] mt-3" />
+                <div className="w-12 h-0.5 bg-primary mt-3" />
               </div>
 
               {/* Search Box */}
@@ -77,7 +77,7 @@ export function MenuPage() {
                 <Input
                   id="menu-search"
                   placeholder="Tìm đồ uống..."
-                  className="pl-10 pr-4 py-2.5 rounded-full border-neutral-200 bg-neutral-50/80 focus:bg-white text-sm transition-all focus-visible:ring-1 focus-visible:ring-[#0F2236]"
+                  className="pl-10 pr-4 py-2.5 rounded-full border-neutral-200 bg-neutral-50/80 focus:bg-white text-sm transition-all focus-visible:ring-1 focus-visible:ring-primary"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -89,14 +89,14 @@ export function MenuPage() {
                   onClick={() => setActiveCategoryId(null)}
                   className={`text-left text-base transition-all duration-200 py-1.5 flex items-center justify-between group ${
                     activeCategoryId === null
-                      ? 'font-bold text-[#0F2236]'
-                      : 'text-neutral-500 hover:text-[#0F2236] font-light'
+                      ? 'font-bold text-primary'
+                      : 'text-neutral-500 hover:text-primary font-light'
                   }`}
                 >
                   <span
                     className={
                       activeCategoryId === null
-                        ? 'border-b-2 border-[#0F2236] pb-0.5'
+                        ? 'border-b-2 border-primary pb-0.5'
                         : 'group-hover:translate-x-1 transition-transform'
                     }
                   >
@@ -109,14 +109,14 @@ export function MenuPage() {
                     onClick={() => setActiveCategoryId(cat.id)}
                     className={`text-left text-base transition-all duration-200 py-1.5 flex items-center justify-between group ${
                       activeCategoryId === cat.id
-                        ? 'font-bold text-[#0F2236]'
-                        : 'text-neutral-500 hover:text-[#0F2236] font-light'
+                        ? 'font-bold text-primary'
+                        : 'text-neutral-500 hover:text-primary font-light'
                     }`}
                   >
                     <span
                       className={
                         activeCategoryId === cat.id
-                          ? 'border-b-2 border-[#0F2236] pb-0.5'
+                          ? 'border-b-2 border-primary pb-0.5'
                           : 'group-hover:translate-x-1 transition-transform'
                       }
                     >
@@ -132,7 +132,7 @@ export function MenuPage() {
                   onClick={() => setActiveCategoryId(null)}
                   className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                     activeCategoryId === null
-                      ? 'bg-[#0F2236] text-white shadow-sm'
+                      ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }`}
                 >
@@ -144,7 +144,7 @@ export function MenuPage() {
                     onClick={() => setActiveCategoryId(cat.id)}
                     className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                       activeCategoryId === cat.id
-                        ? 'bg-[#0F2236] text-white shadow-sm'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                     }`}
                   >
@@ -163,7 +163,7 @@ export function MenuPage() {
             {/* Products grid */}
             {isLoadingProducts ? (
               <div className="flex justify-center items-center py-24">
-                <Loader2 className="h-8 w-8 animate-spin text-[#0F2236]" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -207,11 +207,11 @@ export function MenuPage() {
                           <span className="text-[11px] font-medium uppercase tracking-wider text-neutral-400 mb-1">
                             {product.danhMucTen}
                           </span>
-                          <h4 className="font-bold text-sm sm:text-base text-[#0F2236] group-hover:text-primary transition-colors line-clamp-1 mb-2">
+                          <h4 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-2">
                             {product.tenSanPham}
                           </h4>
                           <div className="mt-auto pt-2 flex items-center justify-between">
-                            <span className="font-black text-base sm:text-lg text-[#0F2236]">
+                            <span className="font-black text-base sm:text-lg text-foreground">
                               {formatCurrency(price)}
                             </span>
                             <div className="flex items-center gap-1 text-xs text-neutral-500">
@@ -226,7 +226,7 @@ export function MenuPage() {
                       <div className="px-4 pb-4">
                         <Button
                           size="sm"
-                          className="w-full rounded-full bg-[#0F2236] hover:bg-[#1a3a5c] text-white transition-all shadow-sm font-medium"
+                          className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm font-medium"
                           disabled={!product.trangThai}
                           aria-label={`Thêm ${product.tenSanPham} vào giỏ`}
                         >
@@ -243,7 +243,7 @@ export function MenuPage() {
             {!isLoadingProducts && products.length === 0 && (
               <div className="text-center py-20 bg-neutral-50 rounded-2xl border border-dashed border-neutral-200">
                 <div className="text-5xl mb-3">🔍</div>
-                <h4 className="text-base font-semibold text-[#0F2236]">
+                <h4 className="text-base font-semibold text-foreground">
                   Không tìm thấy đồ uống phù hợp
                 </h4>
                 <p className="text-neutral-500 text-sm mt-1">

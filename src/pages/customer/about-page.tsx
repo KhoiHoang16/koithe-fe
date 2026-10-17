@@ -53,7 +53,7 @@ export function AboutPage() {
               <span className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
                 Hành Trình Khởi Nghiệp
               </span>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#0F2236] mb-6 font-sans leading-tight">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground mb-6 font-sans leading-tight">
                 TINH HOA TỪ NGUỒN CỘI
               </h2>
 
@@ -71,7 +71,7 @@ export function AboutPage() {
 
               <Link
                 to="/menu"
-                className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-9 py-3 text-sm font-medium text-neutral-600 hover:border-[#0F2236] hover:text-[#0F2236] hover:bg-neutral-50 transition-all duration-300 shadow-sm"
+                className="inline-flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground px-9 py-3 text-sm font-semibold transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
               >
                 Khám Phá Các Dòng Trà
               </Link>

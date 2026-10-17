@@ -1,48 +1,50 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
-/** Layout cho trang Auth (login, register, forgot password) */
+/** Layout cho trang Auth (login, register, forgot password) - Luxury Centered Card trên nền cửa hàng KOI Thé */
 export function AuthLayout() {
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Brand */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/src/assets/hero-bg.jpg')] bg-cover bg-center opacity-20" />
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white">
-          <div className="mb-8 text-8xl">🧋</div>
-          <h1 className="text-4xl font-bold mb-4 text-center">MilkTea</h1>
-          <p className="text-xl text-white/80 text-center max-w-sm">
-            Hương vị đích thực, trải nghiệm tuyệt vời
-          </p>
-          <div className="mt-12 grid grid-cols-3 gap-6 text-center">
-            {[
-              { icon: '☕', label: '50+ sản phẩm' },
-              { icon: '🚀', label: 'Giao nhanh' },
-              { icon: '💎', label: 'Tích điểm' },
-            ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center gap-2">
-                <span className="text-3xl">{item.icon}</span>
-                <span className="text-sm text-white/70">{item.label}</span>
-              </div>
-            ))}
-          </div>
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none">
+      {/* Background Image: Cửa hàng KOI Thé thực tế */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 transition-transform duration-1000 ease-out"
+        style={{ backgroundImage: "url('/auth-bg.jpg')" }}
+      />
+
+      {/* Ambient Vignette Overlay for Depth & Contrast */}
+      <div className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/60 pointer-events-none" />
+
+      {/* Top Left: Quick back to Home button */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-xs font-medium transition-all group"
+      >
+        <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+        <span>Trang chủ</span>
+      </Link>
+
+      {/* Centered Luxury Glassmorphism Card */}
+      <div className="relative z-10 w-full max-w-[440px] bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.35)] border border-white/40 p-6 sm:p-9 my-8 animate-fade-in">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <Link to="/" className="flex flex-col items-center gap-2 group">
+            <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground font-sans font-bold text-sm flex items-center justify-center tracking-wider shadow-md group-hover:scale-105 transition-transform duration-300">
+              KOI
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-sans text-xl font-black tracking-widest leading-none text-primary">
+                KOI THÉ
+              </span>
+              <span className="text-[9px] tracking-[0.25em] uppercase text-neutral-400 mt-1 font-semibold">
+                Tea Craft Vietnam
+              </span>
+            </div>
+          </Link>
         </div>
 
-        {/* Decorative bubbles */}
-        <div className="absolute top-10 right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute bottom-20 left-10 h-48 w-48 rounded-full bg-white/5 blur-3xl" />
-      </div>
-
-      {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <span className="text-4xl">🧋</span>
-            <span className="text-2xl font-bold gradient-text">MilkTea</span>
-          </div>
-
-          <Outlet />
-        </div>
+        {/* Page Content (Login, Register, Forgot Password) */}
+        <Outlet />
       </div>
     </div>
   );

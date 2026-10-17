@@ -92,13 +92,7 @@ export function CustomerLayout() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div
-              className={`h-9 w-9 rounded-full flex items-center justify-center font-sans font-bold text-xs tracking-wider transition-all duration-300 ${
-                isTransparentMode
-                  ? 'bg-white/20 text-white border border-white/40 group-hover:scale-105'
-                  : 'bg-primary text-primary-foreground shadow-sm group-hover:scale-105'
-              }`}
-            >
+            <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground font-sans font-bold text-xs flex items-center justify-center tracking-wider shadow-sm group-hover:scale-105 transition-all duration-300">
               KOI
             </div>
             <div className="flex flex-col">
@@ -174,13 +168,7 @@ export function CustomerLayout() {
               >
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
-                  <span
-                    className={`absolute -top-1 -right-1 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                      isTransparentMode
-                        ? 'bg-accent text-accent-foreground shadow-sm'
-                        : 'bg-primary text-primary-foreground'
-                    }`}
-                  >
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full text-[10px] font-bold flex items-center justify-center bg-primary text-primary-foreground shadow-sm">
                     {itemCount > 99 ? '99+' : itemCount}
                   </span>
                 )}
@@ -230,11 +218,7 @@ export function CustomerLayout() {
               <Button
                 size="sm"
                 asChild
-                className={`rounded-xl transition-all ${
-                  isTransparentMode
-                    ? 'bg-white/15 text-white hover:bg-white/25 border border-white/30 backdrop-blur-sm'
-                    : 'btn-primary'
-                }`}
+                className="rounded-xl transition-all bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
               >
                 <Link to="/login">
                   <User className="h-4 w-4 mr-1.5" />
@@ -266,7 +250,7 @@ export function CustomerLayout() {
                   KOI
                 </div>
                 <div>
-                  <span className="font-sans text-xl font-black tracking-widest text-[#0F2236] block leading-none">
+                  <span className="font-sans text-xl font-black tracking-widest text-foreground block leading-none">
                     KOI THÉ
                   </span>
                   <span className="text-[10px] tracking-widest uppercase text-muted-foreground block mt-1">
@@ -281,43 +265,43 @@ export function CustomerLayout() {
 
             {/* Col 1: Khám phá */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F2236] mb-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-4">
                 Khám Phá
               </h4>
               <ul className="space-y-2.5 text-sm text-neutral-500 font-light">
-                <li><Link to="/menu" className="hover:text-[#0F2236] transition-colors">Thực đơn đặc sắc</Link></li>
-                <li><Link to="/track-order" className="hover:text-[#0F2236] transition-colors">Theo dõi đơn hàng</Link></li>
-                <li><Link to="/menu" className="hover:text-[#0F2236] transition-colors">Trân châu Hoàng Kim</Link></li>
-                <li><Link to="/menu" className="hover:text-[#0F2236] transition-colors">Bộ sưu tập Macchiato</Link></li>
+                <li><Link to="/menu" className="hover:text-primary transition-colors">Thực đơn đặc sắc</Link></li>
+                <li><Link to="/track-order" className="hover:text-primary transition-colors">Theo dõi đơn hàng</Link></li>
+                <li><Link to="/menu" className="hover:text-primary transition-colors">Trân châu Hoàng Kim</Link></li>
+                <li><Link to="/menu" className="hover:text-primary transition-colors">Bộ sưu tập Macchiato</Link></li>
               </ul>
             </div>
 
             {/* Col 2: Về Chúng Tôi */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F2236] mb-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-4">
                 Về Chúng Tôi
               </h4>
               <ul className="space-y-2.5 text-sm text-neutral-500 font-light">
-                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Câu chuyện thương hiệu</Link></li>
-                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Hệ thống cửa hàng</Link></li>
-                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Chính sách chất lượng</Link></li>
-                <li><Link to="/about" className="hover:text-[#0F2236] transition-colors">Tuyển dụng</Link></li>
+                <li><Link to="/about" className="hover:text-primary transition-colors">Câu chuyện thương hiệu</Link></li>
+                <li><Link to="/about" className="hover:text-primary transition-colors">Hệ thống cửa hàng</Link></li>
+                <li><Link to="/about" className="hover:text-primary transition-colors">Chính sách chất lượng</Link></li>
+                <li><Link to="/about" className="hover:text-primary transition-colors">Tuyển dụng</Link></li>
               </ul>
             </div>
 
             {/* Col 3: Liên hệ */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0F2236] mb-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-4">
                 Dịch Vụ Khách Hàng
               </h4>
               <ul className="space-y-2.5 text-sm text-neutral-500 font-light">
                 <li className="flex items-center gap-2">
                   <span className="text-neutral-400">Hotline:</span>
-                  <a href="tel:1900636123" className="font-medium text-[#0F2236] hover:underline">1900 636 123</a>
+                  <a href="tel:1900636123" className="font-medium text-foreground hover:text-primary hover:underline transition-colors">1900 636 123</a>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-neutral-400">Email:</span>
-                  <a href="mailto:contact@koithe.vn" className="hover:text-[#0F2236] hover:underline">contact@koithe.vn</a>
+                  <a href="mailto:contact@koithe.vn" className="text-foreground hover:text-primary hover:underline transition-colors">contact@koithe.vn</a>
                 </li>
                 <li className="text-xs text-neutral-400 pt-1">
                   Giờ hoạt động: 08:30 – 22:00

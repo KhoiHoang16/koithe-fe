@@ -151,7 +151,9 @@ export function CheckoutPage() {
                   type="button"
                   onClick={() => setValue('loaiDonHang', 'DELIVERY')}
                   className={`p-3 rounded-xl border text-center flex flex-col items-center gap-1 transition-all ${
-                    selectedLoaiDonHang === 'DELIVERY' ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-input hover:bg-accent'
+                    selectedLoaiDonHang === 'DELIVERY'
+                      ? 'border-primary bg-primary text-primary-foreground font-bold shadow-sm'
+                      : 'border-input bg-card hover:border-primary/50 text-foreground'
                   }`}
                 >
                   <Truck className="h-5 w-5" />
@@ -161,7 +163,9 @@ export function CheckoutPage() {
                   type="button"
                   onClick={() => setValue('loaiDonHang', 'TAKEAWAY')}
                   className={`p-3 rounded-xl border text-center flex flex-col items-center gap-1 transition-all ${
-                    selectedLoaiDonHang === 'TAKEAWAY' ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-input hover:bg-accent'
+                    selectedLoaiDonHang === 'TAKEAWAY'
+                      ? 'border-primary bg-primary text-primary-foreground font-bold shadow-sm'
+                      : 'border-input bg-card hover:border-primary/50 text-foreground'
                   }`}
                 >
                   <Store className="h-5 w-5" />
@@ -171,7 +175,9 @@ export function CheckoutPage() {
                   type="button"
                   onClick={() => setValue('loaiDonHang', 'AT_TABLE')}
                   className={`p-3 rounded-xl border text-center flex flex-col items-center gap-1 transition-all ${
-                    selectedLoaiDonHang === 'AT_TABLE' ? 'border-primary bg-primary/10 text-primary font-bold' : 'border-input hover:bg-accent'
+                    selectedLoaiDonHang === 'AT_TABLE'
+                      ? 'border-primary bg-primary text-primary-foreground font-bold shadow-sm'
+                      : 'border-input bg-card hover:border-primary/50 text-foreground'
                   }`}
                 >
                   <QrCode className="h-5 w-5" />

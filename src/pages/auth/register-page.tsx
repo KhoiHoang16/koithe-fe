@@ -68,77 +68,98 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Tạo tài khoản</h1>
-        <p className="text-muted-foreground text-sm mt-1">
+    <div className="space-y-6">
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl font-black text-foreground tracking-tight">Tạo tài khoản</h1>
+        <p className="text-neutral-500 text-xs sm:text-sm mt-1 font-light">
           Đã có tài khoản?{' '}
-          <Link to="/login" className="text-primary hover:underline font-medium">
+          <Link to="/login" className="text-primary hover:underline font-semibold">
             Đăng nhập
           </Link>
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <div className="space-y-2">
-          <Label htmlFor="reg-name">Họ và tên</Label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
+        <div className="space-y-1.5">
+          <Label htmlFor="reg-name" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
+            Họ và tên
+          </Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input id="reg-name" placeholder="Nguyễn Văn A" className="pl-10" {...register('hoTen')} />
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Input
+              id="reg-name"
+              placeholder="Nguyễn Văn A"
+              className="pl-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
+              {...register('hoTen')}
+            />
           </div>
-          {errors.hoTen && <p className="text-xs text-destructive">{errors.hoTen.message}</p>}
+          {errors.hoTen && <p className="text-xs text-destructive mt-1">{errors.hoTen.message}</p>}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="reg-phone">Số điện thoại</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="reg-phone" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
+            Số điện thoại
+          </Label>
           <div className="relative">
-            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input id="reg-phone" type="tel" placeholder="0xxxxxxxxx" className="pl-10" {...register('soDienThoai')} />
+            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Input
+              id="reg-phone"
+              type="tel"
+              placeholder="0xxxxxxxxx"
+              className="pl-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
+              {...register('soDienThoai')}
+            />
           </div>
-          {errors.soDienThoai && <p className="text-xs text-destructive">{errors.soDienThoai.message}</p>}
+          {errors.soDienThoai && <p className="text-xs text-destructive mt-1">{errors.soDienThoai.message}</p>}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="reg-password">
+        <div className="space-y-1.5">
+          <Label htmlFor="reg-password" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
             Mật khẩu
           </Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <Input
               id="reg-password"
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
-              className="pl-10 pr-10"
+              className="pl-10 pr-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
               {...register('matKhau')}
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 transition-colors"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.matKhau && <p className="text-xs text-destructive">{errors.matKhau.message}</p>}
+          {errors.matKhau && <p className="text-xs text-destructive mt-1">{errors.matKhau.message}</p>}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="reg-confirm">Xác nhận mật khẩu</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="reg-confirm" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
+            Xác nhận mật khẩu
+          </Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <Input
               id="reg-confirm"
               type="password"
               placeholder="••••••••"
-              className="pl-10"
+              className="pl-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
               {...register('xacNhanMatKhau')}
             />
           </div>
-          {errors.xacNhanMatKhau && <p className="text-xs text-destructive">{errors.xacNhanMatKhau.message}</p>}
+          {errors.xacNhanMatKhau && <p className="text-xs text-destructive mt-1">{errors.xacNhanMatKhau.message}</p>}
         </div>
 
-        <Button type="submit" className="w-full" isLoading={isLoading} size="lg">
+        <Button
+          type="submit"
+          className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all shadow-sm mt-2"
+          isLoading={isLoading}
+        >
           Đăng ký
         </Button>
       </form>

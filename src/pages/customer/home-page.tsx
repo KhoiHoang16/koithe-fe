@@ -96,7 +96,7 @@ export function HomePage() {
             {/* Right Column: Editorial Typography */}
             <div className="lg:col-span-6 flex flex-col justify-center items-start lg:items-end text-left lg:text-right lg:pr-6">
               <div className="max-w-xl">
-                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#0F2236] mb-8 font-sans leading-tight">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground mb-8 font-sans leading-tight">
                   VỀ CHÚNG TÔI
                 </h2>
 
@@ -115,7 +115,7 @@ export function HomePage() {
                 <div className="flex justify-start lg:justify-end">
                   <Link
                     to="/about"
-                    className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-9 py-3 text-sm font-medium text-neutral-600 hover:border-[#0F2236] hover:text-[#0F2236] hover:bg-neutral-50 transition-all duration-300 shadow-sm"
+                    className="inline-flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground px-9 py-3 text-sm font-semibold transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
                   >
                     Tìm Hiểu Thêm
                   </Link>
@@ -134,7 +134,7 @@ export function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-center">
             {/* Left Column (Approx 30%): Header & Description */}
             <div className="lg:col-span-4 flex flex-col justify-center items-start">
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#0F2236] mb-8 font-sans leading-tight">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground mb-8 font-sans leading-tight">
                 SẢN PHẨM
               </h2>
               <p className="text-base sm:text-lg text-neutral-600 leading-relaxed font-light mb-10 max-w-sm">
@@ -142,7 +142,7 @@ export function HomePage() {
               </p>
               <Link
                 to="/menu"
-                className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-9 py-3 text-sm font-medium text-neutral-600 hover:border-[#0F2236] hover:text-[#0F2236] hover:bg-neutral-50 transition-all duration-300 shadow-sm"
+                className="inline-flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground px-9 py-3 text-sm font-semibold transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
               >
                 Tìm Hiểu Thêm
               </Link>
@@ -177,19 +177,19 @@ export function HomePage() {
 
               {/* Chagee Signature Progress Indicator Bar */}
               <div className="w-full h-[3px] bg-neutral-200 rounded-full mt-10 overflow-hidden">
-                <div className="w-1/3 h-full bg-[#0F2236] rounded-full" />
+                <div className="w-1/3 h-full bg-primary rounded-full" />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Floating Back To Top Button (Chagee style) */}
+      {/* Floating Back To Top Button */}
       {showBackToTop && (
         <button
           onClick={scrollToTop}
           aria-label="Lên đầu trang"
-          className="fixed bottom-8 right-8 z-40 h-11 w-11 rounded-full bg-neutral-200/80 hover:bg-neutral-300 text-neutral-600 hover:text-neutral-900 flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 backdrop-blur-sm"
+          className="fixed bottom-8 right-8 z-40 h-11 w-11 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
         >
           <ChevronUp className="h-5 w-5" />
         </button>
