@@ -67,73 +67,75 @@ export function PaymentPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-xl animate-fade-in">
-      <Card className="p-6 text-center space-y-6 shadow-lg border">
-        {/* Header Badge */}
-        <div className="flex items-center justify-between border-b pb-4">
-          <div className="text-left">
-            <span className="text-xs text-muted-foreground">Mã đơn hàng</span>
-            <div className="font-bold text-sm text-foreground">{order.maDonHang}</div>
-          </div>
-          <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 gap-1">
-            <Clock className="h-3.5 w-3.5" /> Hạn thanh toán: {timeFormatted}
-          </Badge>
-        </div>
-
-        {/* QR Code Container */}
-        <div className="space-y-3">
-          <h2 className="text-lg font-bold">Quét mã QR để thanh toán</h2>
-          <p className="text-xs text-muted-foreground">Mở ứng dụng ngân hàng hoặc ví điện tử để quét mã</p>
-
-          <div className="mx-auto w-60 h-60 bg-white p-4 rounded-2xl border-2 border-primary/20 shadow-md flex flex-col items-center justify-center">
-            {/* VietQR Mock Image */}
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=KOITHE_ORDER_${order.maDonHang}`}
-              alt="Payment QR Code"
-              className="w-full h-full object-contain"
-            />
+    <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed py-12 animate-fade-in flex flex-col justify-center">
+      <div className="container mx-auto px-4 max-w-xl">
+        <Card className="p-6 sm:p-8 text-center space-y-6 shadow-sm border border-white/80 bg-white/95 backdrop-blur-md rounded-3xl">
+          {/* Header Badge */}
+          <div className="flex items-center justify-between border-b pb-4">
+            <div className="text-left">
+              <span className="text-xs text-muted-foreground">Mã đơn hàng</span>
+              <div className="font-bold text-sm text-foreground">{order.maDonHang}</div>
+            </div>
+            <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 gap-1 rounded-lg">
+              <Clock className="h-3.5 w-3.5" /> Hạn thanh toán: {timeFormatted}
+            </Badge>
           </div>
 
-          <div className="text-2xl font-bold text-primary">{formatVND(order.tongThanhToan)}</div>
-        </div>
+          {/* QR Code Container */}
+          <div className="space-y-3">
+            <h2 className="text-lg font-bold">Quét mã QR để thanh toán</h2>
+            <p className="text-xs text-muted-foreground">Mở ứng dụng ngân hàng hoặc ví điện tử để quét mã</p>
 
-        {/* Payment Account Transfer Details */}
-        <div className="bg-muted/40 p-4 rounded-xl text-xs space-y-2 text-left border">
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Ngân hàng:</span>
-            <span className="font-semibold">MBBank (Ngân hàng Quân Đội)</span>
+            <div className="mx-auto w-60 h-60 bg-white p-4 rounded-2xl border-2 border-primary/20 shadow-xs flex flex-col items-center justify-center">
+              {/* VietQR Mock Image */}
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=KOITHE_ORDER_${order.maDonHang}`}
+                alt="Payment QR Code"
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            <div className="text-2xl font-bold text-primary">{formatVND(order.tongThanhToan)}</div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Số tài khoản:</span>
-            <div className="flex items-center gap-1 font-mono font-bold">
-              <span>999988887777</span>
-              <Button variant="ghost" size="icon-sm" onClick={() => handleCopy('999988887777')}>
-                <Copy className="h-3 w-3" />
-              </Button>
+
+          {/* Payment Account Transfer Details */}
+          <div className="bg-stone-50/80 p-4 rounded-2xl text-xs space-y-2 text-left border border-stone-200/80">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Ngân hàng:</span>
+              <span className="font-semibold">MBBank (Ngân hàng Quân Đội)</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Số tài khoản:</span>
+              <div className="flex items-center gap-1 font-mono font-bold">
+                <span>999988887777</span>
+                <Button variant="ghost" size="icon-sm" onClick={() => handleCopy('999988887777')}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Nội dung chuyển khoản:</span>
+              <div className="flex items-center gap-1 font-mono font-bold text-primary">
+                <span>{order.maDonHang}</span>
+                <Button variant="ghost" size="icon-sm" onClick={() => handleCopy(order.maDonHang)}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground">Nội dung chuyển khoản:</span>
-            <div className="flex items-center gap-1 font-mono font-bold text-primary">
-              <span>{order.maDonHang}</span>
-              <Button variant="ghost" size="icon-sm" onClick={() => handleCopy(order.maDonHang)}>
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3 pt-2">
+            <Button size="lg" className="w-full h-12 rounded-2xl font-bold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer" onClick={handleSimulatePayment} isLoading={isVerifying}>
+              <CheckCircle2 className="h-5 w-5" /> Tôi đã thanh toán xong
+            </Button>
+
+            <Button variant="outline" size="sm" className="w-full h-10 text-xs rounded-xl border-stone-200 text-stone-600 hover:bg-stone-100" onClick={() => navigate('/menu')}>
+              Hủy và quay lại mua sắm
+            </Button>
           </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3 pt-2">
-          <Button size="lg" className="w-full font-bold gap-2" onClick={handleSimulatePayment} isLoading={isVerifying}>
-            <CheckCircle2 className="h-5 w-5" /> Tôi đã thanh toán xong
-          </Button>
-
-          <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => navigate('/menu')}>
-            Hủy và quay lại mua sắm
-          </Button>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

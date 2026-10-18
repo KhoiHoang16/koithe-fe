@@ -13,6 +13,7 @@ import { Card } from '@/shared/components/ui/card';
 import { useCartStore } from '@/shared/stores/cart-store';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { orderApi } from '@/features/orders/api/order-api';
+import { CheckoutStepper } from '@/components/common/checkout-stepper';
 import type { OrderType, PaymentMethod } from '@/shared/types/order.types';
 
 const checkoutSchema = z.object({
@@ -120,29 +121,37 @@ export function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <p className="text-muted-foreground mb-4">Giỏ hàng của bạn đang trống</p>
-        <Button asChild>
-          <Link to="/menu">Về thực đơn</Link>
-        </Button>
+      <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed py-16 flex items-center justify-center">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-white/80 p-8 text-center max-w-md mx-auto shadow-sm">
+          <p className="text-muted-foreground mb-4">Giỏ hàng của bạn đang trống</p>
+          <Button asChild className="rounded-xl">
+            <Link to="/menu">Về thực đơn</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 animate-fade-in max-w-5xl">
-      <Link to="/cart" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Quay lại giỏ hàng
-      </Link>
+    <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed pb-20 animate-fade-in">
+      <div className="container mx-auto px-4 py-6 max-w-5xl">
+        <CheckoutStepper currentStep={2} />
 
-      <h1 className="text-3xl font-bold tracking-tight mb-8">Thanh toán & Đặt hàng</h1>
+        <div className="mt-4 mb-6">
+          <Link to="/cart" className="inline-flex items-center text-xs sm:text-sm font-semibold text-stone-500 hover:text-primary transition-colors mb-1.5">
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> Quay lại giỏ hàng
+          </Link>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">
+            Thanh toán & Đặt hàng
+          </h1>
+        </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left 2 Cols: Form Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* 1. Order Type Selection */}
-            <Card className="p-5">
+            <Card className="p-5 bg-white/95 backdrop-blur-md border-white/80 rounded-2xl shadow-xs">
               <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
                 <Store className="h-5 w-5 text-primary" /> 1. Hình thức nhận hàng
               </h2>
@@ -187,7 +196,7 @@ export function CheckoutPage() {
             </Card>
 
             {/* 2. Customer Contact Info */}
-            <Card className="p-5 space-y-4">
+            <Card className="p-5 space-y-4 bg-white/95 backdrop-blur-md border-white/80 rounded-2xl shadow-xs">
               <h2 className="text-base font-semibold flex items-center gap-2">
                 <User className="h-5 w-5 text-primary" /> 2. Thông tin người nhận
               </h2>
@@ -239,7 +248,7 @@ export function CheckoutPage() {
             </Card>
 
             {/* 3. Payment Method */}
-            <Card className="p-5 space-y-3">
+            <Card className="p-5 space-y-3 bg-white/95 backdrop-blur-md border-white/80 rounded-2xl shadow-xs">
               <h2 className="text-base font-semibold flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-primary" /> 3. Phương thức thanh toán
               </h2>
@@ -278,7 +287,7 @@ export function CheckoutPage() {
 
           {/* Right 1 Col: Summary & Submit */}
           <div className="space-y-6">
-            <Card className="p-5 space-y-4">
+            <Card className="p-5 space-y-4 bg-white/95 backdrop-blur-md border-white/80 rounded-2xl shadow-sm sticky top-24">
               <h3 className="font-bold text-base border-b pb-3">Tóm tắt đơn hàng</h3>
 
               <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
@@ -329,5 +338,6 @@ export function CheckoutPage() {
         </div>
       </form>
     </div>
+  </div>
   );
 }

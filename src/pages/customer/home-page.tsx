@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const SIGNATURE_PRODUCTS = [
@@ -67,12 +67,6 @@ export function HomePage() {
               Tinh Hoa Trà Đạo – Trọn Vị Nguyên Bản
             </p>
           </div>
-        </div>
-
-        {/* Scroll indicator (Chagee style) */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity pointer-events-none z-10">
-          <span className="text-[10px] tracking-widest uppercase text-white/80 font-medium">Cuộn để khám phá</span>
-          <ChevronDown className="h-4 w-4 text-white animate-bounce" />
         </div>
       </section>
 

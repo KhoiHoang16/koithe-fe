@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
 
 export function AboutPage() {
   return (
@@ -17,16 +16,12 @@ export function AboutPage() {
         {/* Soft navbar top gradient only */}
         <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/35 via-black/10 to-transparent pointer-events-none" />
 
-        {/* Headline at bottom matching CHAGEE's "CÂU CHUYỆN THƯƠNG HIỆU" - sized down, clean & sharp */}
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-12 pb-10 sm:pb-12 z-10 text-center flex flex-col items-center">
-          <h1 className="font-sans text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-[0.18em] leading-none text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] uppercase whitespace-nowrap">
-            CÂU CHUYỆN THƯƠNG HIỆU
-          </h1>
-
-          {/* Scroll Down Indicator */}
-          <div className="flex flex-col items-center gap-1 opacity-75 hover:opacity-100 transition-opacity pointer-events-none mt-4 sm:mt-5">
-            <span className="text-[10px] tracking-widest uppercase text-white/90 font-medium">Cuộn để khám phá</span>
-            <ChevronDown className="h-3.5 w-3.5 text-white animate-bounce" />
+        {/* Title at Bottom Left (matching Menu Page CHAGEE style) */}
+        <div className="absolute inset-x-0 bottom-0 pb-10 sm:pb-14 pointer-events-none z-10">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-[0.12em] sm:tracking-[0.15em] uppercase drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)] font-sans">
+              CÂU CHUYỆN THƯƠNG HIỆU
+            </h1>
           </div>
         </div>
       </section>

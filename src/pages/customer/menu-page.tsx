@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Star, ShoppingCart, Loader2, ChevronDown } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { Search, Star, Loader2 } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -23,7 +22,7 @@ export function MenuPage() {
 
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed">
       {/* ============================================================
           HERO BANNER (Full Screen 100vh - CHAGEE & Homepage Style)
           ============================================================ */}
@@ -42,14 +41,6 @@ export function MenuPage() {
               SẢN PHẨM
             </h1>
           </div>
-        </div>
-
-        {/* Scroll indicator (Chagee & Homepage style) */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-80 hover:opacity-100 transition-opacity pointer-events-none z-10">
-          <span className="text-[10px] tracking-widest uppercase text-white/90 font-medium drop-shadow-md">
-            Cuộn để khám phá
-          </span>
-          <ChevronDown className="h-4 w-4 text-white animate-bounce drop-shadow-md" />
         </div>
       </section>
 
@@ -77,7 +68,7 @@ export function MenuPage() {
                 <Input
                   id="menu-search"
                   placeholder="Tìm đồ uống..."
-                  className="pl-10 pr-4 py-2.5 rounded-full border-neutral-200 bg-neutral-50/80 focus:bg-white text-sm transition-all focus-visible:ring-1 focus-visible:ring-primary"
+                  className="pl-10 pr-4 py-2.5 rounded-full border-stone-200/90 bg-white/90 focus:bg-white text-sm transition-all focus-visible:ring-1 focus-visible:ring-primary shadow-2xs"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -133,7 +124,7 @@ export function MenuPage() {
                   className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                     activeCategoryId === null
                       ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                      : 'bg-white/80 border border-stone-200/80 text-stone-700 hover:bg-white'
                   }`}
                 >
                   Tất cả dòng trà
@@ -145,7 +136,7 @@ export function MenuPage() {
                     className={`shrink-0 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                       activeCategoryId === cat.id
                         ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                        : 'bg-white/80 border border-stone-200/80 text-stone-700 hover:bg-white'
                     }`}
                   >
                     {cat.tenDanhMuc}
@@ -176,14 +167,14 @@ export function MenuPage() {
                   return (
                     <Card
                       key={product.id}
-                      className="group overflow-hidden rounded-2xl border border-neutral-200/80 bg-white hover:shadow-xl hover:border-neutral-300 transition-all duration-300 flex flex-col"
+                      className="group overflow-hidden rounded-2xl border border-white/80 bg-white/95 backdrop-blur-md hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col shadow-xs"
                     >
                       <Link
                         to={`/menu/${product.id}`}
                         aria-label={`Xem chi tiết ${product.tenSanPham}`}
                         className="flex-1 flex flex-col"
                       >
-                        <div className="relative aspect-[4/3] bg-neutral-100 overflow-hidden flex items-center justify-center">
+                        <div className="relative aspect-[4/3] bg-[#F8F5F1] overflow-hidden flex items-center justify-center border-b border-stone-100">
                           {product.hinhAnh ? (
                             <img
                               src={product.hinhAnh}
@@ -223,17 +214,6 @@ export function MenuPage() {
                           </div>
                         </CardContent>
                       </Link>
-                      <div className="px-4 pb-4">
-                        <Button
-                          size="sm"
-                          className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all shadow-sm font-medium"
-                          disabled={!product.trangThai}
-                          aria-label={`Thêm ${product.tenSanPham} vào giỏ`}
-                        >
-                          <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
-                          Thêm vào giỏ
-                        </Button>
-                      </div>
                     </Card>
                   );
                 })}
