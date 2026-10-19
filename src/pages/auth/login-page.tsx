@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Lock, Phone } from 'lucide-react';
+import { Eye, EyeOff, Lock, Phone, Sparkles, UserCheck, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -52,6 +52,40 @@ export function LoginPage() {
       toast.error('Số điện thoại hoặc mật khẩu không đúng');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  /**
+   * Đăng nhập giả lập nhanh phục vụ quá trình phát triển & kiểm thử giao diện
+   * (Xóa hàm này khi tích hợp hoàn chỉnh và lên production)
+   */
+  const handleDemoLogin = (role: 'CUSTOMER' | 'ADMIN' = 'CUSTOMER') => {
+    login({
+      accessToken: 'demo-token-' + Date.now(),
+      refreshToken: 'demo-refresh-token-' + Date.now(),
+      user: {
+        id: role === 'CUSTOMER' ? 1 : 99,
+        hoTen: role === 'CUSTOMER' ? 'Nguyễn Văn A' : 'Quản trị viên KOI',
+        email: role === 'CUSTOMER' ? 'nguyenvana@gmail.com' : 'admin@koithe.vn',
+        soDienThoai: role === 'CUSTOMER' ? '0901234567' : '0988888888',
+        vaiTro: role,
+        anhDaiDien:
+          role === 'CUSTOMER'
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+            : undefined,
+        trangThai: true,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    });
+    toast.success(
+      `Đăng nhập thành công tài khoản ${role === 'CUSTOMER' ? 'Khách hàng' : 'Quản trị viên'} (Demo)!`,
+    );
+    if (role === 'ADMIN') {
+      navigate('/admin', { replace: true });
+    } else {
+      const targetPath =
+        from === '/' || from === '/login' || from === '/register' ? '/profile' : from;
+      navigate(targetPath, { replace: true });
     }
   };
 
@@ -132,6 +166,45 @@ export function LoginPage() {
           Đăng nhập
         </Button>
       </form>
+
+      {/* ============================================================== */}
+      {/* DEV / DEMO QUICK LOGIN (Dễ dàng xóa bỏ khi lên Production)      */}
+      {/* ============================================================== */}
+      <div className="pt-1">
+        <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3.5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-primary flex items-center gap-1.5 uppercase tracking-wider">
+              <Sparkles className="h-3.5 w-3.5 text-primary" /> Đăng nhập nhanh (Demo)
+            </span>
+            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
+              Test UI
+            </span>
+          </div>
+          <p className="text-[11px] text-neutral-500 leading-relaxed">
+            Chọn vai trò bên dưới để kiểm tra giao diện không cần qua backend:
+          </p>
+          <div className="grid grid-cols-2 gap-2 pt-0.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleDemoLogin('CUSTOMER')}
+              className="h-9 text-xs font-semibold rounded-xl border-primary/30 bg-white hover:bg-primary hover:text-white hover:border-primary transition-all text-primary gap-1.5"
+            >
+              <UserCheck className="h-3.5 w-3.5" /> Khách hàng
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleDemoLogin('ADMIN')}
+              className="h-9 text-xs font-semibold rounded-xl border-neutral-300 bg-white hover:bg-neutral-800 hover:text-white hover:border-neutral-800 transition-all text-neutral-700 gap-1.5"
+            >
+              <Shield className="h-3.5 w-3.5" /> Quản trị viên
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <div className="relative my-2">
         <div className="absolute inset-0 flex items-center">

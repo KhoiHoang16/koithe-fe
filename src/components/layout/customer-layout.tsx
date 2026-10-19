@@ -1,25 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, Search, Home, BookOpen, Package } from 'lucide-react';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { useCartStore } from '@/shared/stores/cart-store';
 import { Button } from '@/shared/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/shared/components/ui/dropdown-menu';
 import { getInitials } from '@/shared/libs/utils';
 
 /** Customer Web layout - Smart Header (Auto-hide on scroll down, reveal on scroll up, transparent at top) + Footer + Bottom nav mobile */
 export function CustomerLayout() {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const itemCount = useCartStore((state) => state.getItemCount());
-  const navigate = useNavigate();
   const location = useLocation();
 
   const isTransparentPage = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/menu';
@@ -65,12 +56,6 @@ export function CustomerLayout() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
-  // Header trong suốt chỉ khi: đang ở trang chủ hoặc trang về chúng tôi, chưa cuộn xuống, và chuột không hover
   const isTransparentMode = isTransparentPage && !isScrolled && !isHovered;
 
   return (
@@ -175,45 +160,27 @@ export function CustomerLayout() {
               </Button>
             </Link>
 
-            {/* User Menu */}
+            {/* User Profile Link (Direct Link to Profile + User Name) */}
             {isAuthenticated && user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label="Menu tài khoản">
-                    <Avatar className="h-8 w-8 ring-1 ring-border">
-                      <AvatarImage src={user.anhDaiDien} alt={user.hoTen} />
-                      <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                        {getInitials(user.hoTen)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{user.hoTen}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile">Tài khoản</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/orders">Đơn hàng</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/loyalty">Điểm thưởng</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={handleLogout}
-                  >
-                    Đăng xuất
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Link
+                to="/profile"
+                className={`flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-full transition-all group ${
+                  isTransparentMode
+                    ? 'text-white hover:bg-white/10'
+                    : 'text-stone-800 hover:bg-stone-100/90'
+                }`}
+                title="Trang cá nhân của bạn"
+              >
+                <Avatar className="h-8 w-8 ring-1 ring-border group-hover:ring-primary/50 transition-all shrink-0">
+                  <AvatarImage src={user.anhDaiDien} alt={user.hoTen} />
+                  <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                    {getInitials(user.hoTen)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-xs sm:text-sm font-semibold tracking-tight truncate max-w-[120px] sm:max-w-[170px] group-hover:text-primary transition-colors">
+                  {user.hoTen}
+                </span>
+              </Link>
             ) : (
               <Button
                 size="sm"
