@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { LoadingScreen } from '@/shared/components/feedback/loading-spinner';
-import { httpClient } from '@/shared/api/http-client';
+import { orderApi } from '@/features/orders/api/order-api';
 
 export function PaymentCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -13,7 +13,7 @@ export function PaymentCallbackPage() {
   // Gọi API verify (KHÔNG tin query params - check HMAC ở backend)
   const { data, isLoading, error } = useQuery({
     queryKey: ['payment', 'verify', orderId],
-    queryFn: () => httpClient.get(`/payments/verify/${orderId}`),
+    queryFn: () => orderApi.verifyPayment(orderId ?? ''),
     enabled: !!orderId,
     retry: 1,
   });

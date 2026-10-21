@@ -2,14 +2,33 @@ import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
-import { MOCK_PRODUCTS } from '@/features/catalog/api/catalog-api';
+import { useProducts } from '@/features/catalog/api/queries';
+import { EmptyState } from '@/shared/components/feedback/empty-state';
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 }
 
 export function FavoritesPage() {
-  const favorites = MOCK_PRODUCTS.slice(0, 3);
+  const { data: products = [] } = useProducts();
+  const favorites = products.slice(0, 3);
+
+  if (favorites.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl animate-fade-in">
+        <EmptyState
+          icon="🤍"
+          title="Chưa có đồ uống yêu thích"
+          description="Khám phá thực đơn và thêm những món bạn yêu thích nhé!"
+          action={
+            <Button asChild size="lg" className="mt-6 gap-2">
+              <Link to="/menu">Khám phá thực đơn</Link>
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl animate-fade-in">

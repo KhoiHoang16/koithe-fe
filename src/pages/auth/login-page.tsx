@@ -3,18 +3,17 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Lock, Phone, Sparkles, UserCheck, Shield } from 'lucide-react';
+import { Eye, EyeOff, Lock, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { useAuthStore } from '@/shared/stores/auth-store';
-import { httpClient } from '@/shared/api/http-client';
-import type { LoginResponse } from '@/shared/stores/auth-store';
+import { authApi } from '@/features/auth/api/auth-api';
 
 const loginSchema = z.object({
-  soDienThoai: z.string().min(10, 'Số điện thoại không hợp lệ'),
-  matKhau: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
+  username: z.string().min(3, 'Tên đăng nhập tối thiểu 3 ký tự'),
+  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -38,54 +37,22 @@ export function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const res = await httpClient.post<LoginResponse>('/auth/login', data);
-      login(res as unknown as LoginResponse);
+      const session = await authApi.login(data.username, data.password);
+      login({
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+        user: session.user,
+      });
       toast.success('Đăng nhập thành công!');
-      // Redirect về trang trước hoặc admin nếu là staff
-      const user = (res as unknown as LoginResponse).user;
-      if (user.vaiTro === 'ADMIN' || user.vaiTro === 'MANAGER') {
+      if (session.user.vaiTro === 'ADMIN' || session.user.vaiTro === 'MANAGER') {
         navigate('/admin', { replace: true });
       } else {
         navigate(from, { replace: true });
       }
     } catch {
-      toast.error('Số điện thoại hoặc mật khẩu không đúng');
+      toast.error('Tên đăng nhập hoặc mật khẩu không đúng');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  /**
-   * Đăng nhập giả lập nhanh phục vụ quá trình phát triển & kiểm thử giao diện
-   * (Xóa hàm này khi tích hợp hoàn chỉnh và lên production)
-   */
-  const handleDemoLogin = (role: 'CUSTOMER' | 'ADMIN' = 'CUSTOMER') => {
-    login({
-      accessToken: 'demo-token-' + Date.now(),
-      refreshToken: 'demo-refresh-token-' + Date.now(),
-      user: {
-        id: role === 'CUSTOMER' ? 1 : 99,
-        hoTen: role === 'CUSTOMER' ? 'Nguyễn Văn A' : 'Quản trị viên KOI',
-        email: role === 'CUSTOMER' ? 'nguyenvana@gmail.com' : 'admin@koithe.vn',
-        soDienThoai: role === 'CUSTOMER' ? '0901234567' : '0988888888',
-        vaiTro: role,
-        anhDaiDien:
-          role === 'CUSTOMER'
-            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-            : undefined,
-        trangThai: true,
-        createdAt: '2026-01-01T00:00:00.000Z',
-      },
-    });
-    toast.success(
-      `Đăng nhập thành công tài khoản ${role === 'CUSTOMER' ? 'Khách hàng' : 'Quản trị viên'} (Demo)!`,
-    );
-    if (role === 'ADMIN') {
-      navigate('/admin', { replace: true });
-    } else {
-      const targetPath =
-        from === '/' || from === '/login' || from === '/register' ? '/profile' : from;
-      navigate(targetPath, { replace: true });
     }
   };
 
@@ -103,22 +70,22 @@ export function LoginPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="space-y-1.5">
-          <Label htmlFor="login-phone" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
-            Số điện thoại
+          <Label htmlFor="login-username" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
+            Tên đăng nhập
           </Label>
           <div className="relative">
-            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <Input
-              id="login-phone"
-              type="tel"
-              placeholder="0xxxxxxxxx"
+              id="login-username"
+              type="text"
+              placeholder="Tên đăng nhập"
               className="pl-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
-              autoComplete="tel"
-              {...register('soDienThoai')}
+              autoComplete="username"
+              {...register('username')}
             />
           </div>
-          {errors.soDienThoai && (
-            <p className="text-xs text-destructive mt-1">{errors.soDienThoai.message}</p>
+          {errors.username && (
+            <p className="text-xs text-destructive mt-1">{errors.username.message}</p>
           )}
         </div>
 
@@ -142,7 +109,7 @@ export function LoginPage() {
               placeholder="••••••••"
               className="pl-10 pr-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
               autoComplete="current-password"
-              {...register('matKhau')}
+              {...register('password')}
             />
             <button
               type="button"
@@ -153,8 +120,8 @@ export function LoginPage() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.matKhau && (
-            <p className="text-xs text-destructive mt-1">{errors.matKhau.message}</p>
+          {errors.password && (
+            <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
           )}
         </div>
 
@@ -166,45 +133,6 @@ export function LoginPage() {
           Đăng nhập
         </Button>
       </form>
-
-      {/* ============================================================== */}
-      {/* DEV / DEMO QUICK LOGIN (Dễ dàng xóa bỏ khi lên Production)      */}
-      {/* ============================================================== */}
-      <div className="pt-1">
-        <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3.5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-primary flex items-center gap-1.5 uppercase tracking-wider">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Đăng nhập nhanh (Demo)
-            </span>
-            <span className="text-[10px] bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full">
-              Test UI
-            </span>
-          </div>
-          <p className="text-[11px] text-neutral-500 leading-relaxed">
-            Chọn vai trò bên dưới để kiểm tra giao diện không cần qua backend:
-          </p>
-          <div className="grid grid-cols-2 gap-2 pt-0.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin('CUSTOMER')}
-              className="h-9 text-xs font-semibold rounded-xl border-primary/30 bg-white hover:bg-primary hover:text-white hover:border-primary transition-all text-primary gap-1.5"
-            >
-              <UserCheck className="h-3.5 w-3.5" /> Khách hàng
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin('ADMIN')}
-              className="h-9 text-xs font-semibold rounded-xl border-neutral-300 bg-white hover:bg-neutral-800 hover:text-white hover:border-neutral-800 transition-all text-neutral-700 gap-1.5"
-            >
-              <Shield className="h-3.5 w-3.5" /> Quản trị viên
-            </Button>
-          </div>
-        </div>
-      </div>
 
       <div className="relative my-2">
         <div className="absolute inset-0 flex items-center">

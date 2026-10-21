@@ -10,8 +10,14 @@ import { getInitials } from '@/shared/libs/utils';
 /** Customer Web layout - Smart Header (Auto-hide on scroll down, reveal on scroll up, transparent at top) + Footer + Bottom nav mobile */
 export function CustomerLayout() {
   const { user, isAuthenticated } = useAuthStore();
-  const itemCount = useCartStore((state) => state.getItemCount());
+  const items = useCartStore((state) => state.items);
+  const hydrateCart = useCartStore((state) => state.hydrate);
+  const itemCount = items.reduce((acc, item) => acc + item.quantity, 0);
   const location = useLocation();
+
+  useEffect(() => {
+    hydrateCart().catch(() => {});
+  }, [hydrateCart, isAuthenticated]);
 
   const isTransparentPage = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/menu';
 

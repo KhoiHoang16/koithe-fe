@@ -1,39 +1,43 @@
 import { httpClient } from '@/shared/api/http-client';
-import type { StoreTable } from '@/shared/types/admin.types';
+import type { StoreTable, TableStatus } from '@/shared/types/admin.types';
 
-export const MOCK_TABLES: StoreTable[] = [
-  { id: 1, soBan: 'Bàn 01', khuVuc: 'Tầng 1', soGhe: 4, trangThai: 'AVAILABLE' },
-  { id: 2, soBan: 'Bàn 02', khuVuc: 'Tầng 1', soGhe: 2, trangThai: 'OCCUPIED', donHangHienTaiId: 1001 },
-  { id: 3, soBan: 'Bàn 03', khuVuc: 'Tầng 1', soGhe: 6, trangThai: 'RESERVED' },
-  { id: 4, soBan: 'Bàn 04', khuVuc: 'Tầng 2', soGhe: 4, trangThai: 'AVAILABLE' },
-  { id: 5, soBan: 'Bàn 05', khuVuc: 'Tầng 2', soGhe: 4, trangThai: 'AVAILABLE' },
-  { id: 6, soBan: 'Bàn VIP 01', khuVuc: 'Sân thượng', soGhe: 8, trangThai: 'AVAILABLE' },
-];
+interface BackendTable {
+  id: number;
+  soBan: string;
+  maQrToken?: string;
+  trangThai: string;
+}
+
+const STATUS_MAP: Record<string, TableStatus> = {
+  TRONG: 'AVAILABLE',
+  DANG_CO_KHACH: 'OCCUPIED',
+  DA_DAT_TRUOC: 'RESERVED',
+};
+
+function mapTable(table: BackendTable): StoreTable {
+  return {
+    id: table.id,
+    soBan: table.soBan,
+    khuVuc: '',
+    soGhe: 0,
+    trangThai: STATUS_MAP[table.trangThai] ?? 'AVAILABLE',
+    qrCodeUrl: table.maQrToken ? `/qr/${table.maQrToken}` : undefined,
+  };
+}
 
 export const tableApi = {
   getTables: async (): Promise<StoreTable[]> => {
-    try {
-      return (await httpClient.get('/admin/tables')) as StoreTable[];
-    } catch {
-      return MOCK_TABLES;
-    }
+    const tables = (await httpClient.get('/tables')) as unknown as BackendTable[];
+    return tables.map(mapTable);
   },
 
   createTable: async (data: Partial<StoreTable>): Promise<StoreTable> => {
-    try {
-      return (await httpClient.post('/admin/tables', data)) as StoreTable;
-    } catch {
-      return { id: Date.now(), soBan: data.soBan || 'Bàn Mới', khuVuc: data.khuVuc || 'Tầng 1', soGhe: data.soGhe || 4, trangThai: 'AVAILABLE' };
-    }
+    const table = (await httpClient.post('/tables', { soBan: data.soBan })) as unknown as BackendTable;
+    return mapTable(table);
   },
 
   updateTableStatus: async (id: number, trangThai: StoreTable['trangThai']): Promise<StoreTable> => {
-    try {
-      return (await httpClient.patch(`/admin/tables/${id}/status`, { trangThai })) as StoreTable;
-    } catch {
-      const t = MOCK_TABLES.find((table) => table.id === id);
-      if (t) t.trangThai = trangThai;
-      return t || MOCK_TABLES[0];
-    }
+    const table = (await httpClient.patch(`/tables/${id}/status`, { trangThai })) as unknown as BackendTable;
+    return mapTable(table);
   },
 };

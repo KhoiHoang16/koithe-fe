@@ -1,5 +1,6 @@
-import { httpClient } from './http-client';
+import { ApiError, api, httpClient } from './http-client';
 import { useAuthStore } from '@/shared/stores/auth-store';
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 let isRefreshing = false;
 let refreshQueue: Array<{
@@ -19,7 +20,7 @@ function processQueue(error: unknown, token: string | null) {
 /** Request interceptor: gắn Bearer token và X-Cart-Token */
 httpClient.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().accessToken;
-  const guestCartToken = localStorage.getItem('guest_cart_token');
+  const guestCartToken = typeof localStorage !== 'undefined' ? localStorage.getItem('guest_cart_token') : null;
 
   // Gắn Authorization header
   if (accessToken) {
@@ -36,20 +37,15 @@ httpClient.interceptors.request.use((config) => {
 });
 
 /** Response interceptor: lưu guest cart token mới */
-httpClient.interceptors.response.use(
-  (response) => {
-    // Lưu X-Cart-Token mới từ backend (khi tạo giỏ hàng guest)
-    const newCartToken = response.headers['x-cart-token'];
-    if (newCartToken) {
-      localStorage.setItem('guest_cart_token', newCartToken);
-    }
-    return response;
-  },
-  async (error) => {
-    const originalRequest = error.config;
+httpClient.interceptors.response.use(undefined, async (error: AxiosError | ApiError) => {
+    const originalRequest = (error.config ??
+      (error instanceof ApiError ? error.config : undefined)) as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
+    const status = error instanceof ApiError ? error.code : error.response?.status;
 
     // Xử lý 401 - refresh token tự động
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (status === 401 && originalRequest && !originalRequest._retry) {
       // Bỏ qua các endpoint auth
       const isAuthEndpoint = /\/auth\/(login|register|refresh)/.test(originalRequest.url ?? '');
       if (isAuthEndpoint) return Promise.reject(error);
@@ -68,18 +64,15 @@ httpClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = typeof localStorage !== 'undefined' ? localStorage.getItem('refresh_token') : null;
         if (!refreshToken) throw new Error('No refresh token');
 
-        const res = await httpClient.post<{ accessToken: string; refreshToken: string }>(
+        const res = await api.post<{ accessToken: string; refreshToken: string }>(
           '/auth/refresh',
           { refreshToken },
         );
 
-        const { accessToken, refreshToken: newRefreshToken } = res as unknown as {
-          accessToken: string;
-          refreshToken: string;
-        };
+        const { accessToken, refreshToken: newRefreshToken } = res;
 
         // Cập nhật store và localStorage
         useAuthStore.getState().setAccessToken(accessToken);
@@ -94,7 +87,7 @@ httpClient.interceptors.response.use(
         // Refresh thất bại → logout
         useAuthStore.getState().logout();
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -102,5 +95,4 @@ httpClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
-);
+  });

@@ -21,8 +21,9 @@ import { EmptyState } from '@/shared/components/feedback/empty-state';
 import { ConfirmDeleteDialog } from '@/shared/components/overlay/confirm-delete-dialog';
 import { CheckoutStepper } from '@/components/common/checkout-stepper';
 import { useCartStore } from '@/shared/stores/cart-store';
+import { useAuthStore } from '@/shared/stores/auth-store';
 import { promotionApi } from '@/features/promotions/api/promotion-api';
-import { catalogApi, MOCK_PRODUCTS } from '@/features/catalog/api/catalog-api';
+import { catalogApi } from '@/features/catalog/api/catalog-api';
 import type { Product } from '@/shared/types/catalog.types';
 
 function formatVND(amount: number) {
@@ -31,6 +32,7 @@ function formatVND(amount: number) {
 
 export function CartPage() {
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const {
     items,
     addItem,
@@ -60,13 +62,17 @@ export function CartPage() {
 
   // Chọn 4 sản phẩm đề xuất (loại trừ các món đã có trong giỏ hàng nếu có thể)
   const recommendedProducts = useMemo(() => {
-    const list = allProducts && allProducts.length > 0 ? allProducts : MOCK_PRODUCTS;
+    const list = allProducts && allProducts.length > 0 ? allProducts : [];
     const inCartIds = new Set(items.map((i) => i.productId));
     const available = list.filter((p) => !inCartIds.has(p.id));
     return available.length >= 4 ? available.slice(0, 4) : list.slice(0, 4);
   }, [allProducts, items]);
 
   const handleApplyVoucher = async () => {
+    if (!isAuthenticated) {
+      toast.error('Vui lòng đăng nhập để sử dụng voucher');
+      return;
+    }
     const code = voucherCode.trim().toUpperCase();
     if (!code) {
       toast.error('Vui lòng nhập mã ưu đãi');
@@ -96,7 +102,7 @@ export function CartPage() {
   };
 
   // Nút (+) thêm nhanh món gợi ý vào giỏ hàng
-  const handleQuickAdd = (product: Product, e: React.MouseEvent) => {
+  const handleQuickAdd = async (product: Product, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -105,20 +111,24 @@ export function CartPage() {
         ? product.bienTheList[0]
         : { id: 101, tenBienThe: 'Size M', giaBan: product.giaTu || 45000 };
 
-    addItem({
-      productId: product.id,
-      productName: product.tenSanPham,
-      productImage: product.hinhAnh,
-      variantId: defaultVariant.id,
-      variantName: defaultVariant.tenBienThe,
-      price: defaultVariant.giaBan,
-      sugarLevel: '70%',
-      iceLevel: '50%',
-      toppings: [],
-      quantity: 1,
-    });
+    try {
+      await addItem({
+        productId: product.id,
+        productName: product.tenSanPham,
+        productImage: product.hinhAnh,
+        variantId: defaultVariant.id,
+        variantName: defaultVariant.tenBienThe,
+        price: defaultVariant.giaBan,
+        sugarLevel: '70%',
+        iceLevel: '50%',
+        toppings: [],
+        quantity: 1,
+      });
 
-    toast.success(`Đã thêm 1x ${product.tenSanPham} vào giỏ hàng!`);
+      toast.success(`Đã thêm 1x ${product.tenSanPham} vào giỏ hàng!`);
+    } catch {
+      toast.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+    }
   };
 
   // Giỏ hàng trống
@@ -381,7 +391,11 @@ export function CartPage() {
                 </h3>
               </div>
 
-              {appliedVoucher ? (
+              {!isAuthenticated ? (
+                <p className="text-xs text-muted-foreground">
+                  Đăng nhập để sử dụng voucher cho đơn hàng.
+                </p>
+              ) : appliedVoucher ? (
                 <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl">
                   <div>
                     <div className="text-xs font-bold text-emerald-800 flex items-center gap-1">
@@ -490,8 +504,8 @@ export function CartPage() {
           onOpenChange={setIsClearModalOpen}
           title="Xóa toàn bộ giỏ hàng?"
           description="Tất cả đồ uống trong giỏ hàng sẽ bị xóa. Bạn có chắc chắn muốn tiếp tục không?"
-          onConfirm={() => {
-            clearCart();
+          onConfirm={async () => {
+            await clearCart();
             setIsClearModalOpen(false);
             toast.info('Đã xóa toàn bộ giỏ hàng');
           }}

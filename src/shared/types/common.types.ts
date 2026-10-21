@@ -43,6 +43,7 @@ export interface User {
   anhDaiDien?: string;
   trangThai: boolean;
   createdAt: string;
+  username?: string;
 }
 
 /** Customer (khách hàng đã đăng ký) */

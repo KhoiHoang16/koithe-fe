@@ -100,29 +100,33 @@ export function ProductDetailPage() {
     });
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product) return;
 
-    addItem({
-      productId: product.id,
-      productName: product.tenSanPham,
-      productImage: product.hinhAnh,
-      variantId: currentVariant.id,
-      variantName: currentVariant.tenBienThe,
-      price: currentVariant.giaBan,
-      sugarLevel,
-      iceLevel,
-      toppings: selectedToppings,
-      quantity,
-      note,
-    });
+    try {
+      await addItem({
+        productId: product.id,
+        productName: product.tenSanPham,
+        productImage: product.hinhAnh,
+        variantId: currentVariant.id,
+        variantName: currentVariant.tenBienThe,
+        price: currentVariant.giaBan,
+        sugarLevel,
+        iceLevel,
+        toppings: selectedToppings,
+        quantity,
+        note,
+      });
 
-    toast.success(`Đã thêm ${quantity}x ${product.tenSanPham} vào giỏ hàng!`, {
-      action: {
-        label: 'Xem giỏ hàng',
-        onClick: () => navigate('/cart'),
-      },
-    });
+      toast.success(`Đã thêm ${quantity}x ${product.tenSanPham} vào giỏ hàng!`, {
+        action: {
+          label: 'Xem giỏ hàng',
+          onClick: () => navigate('/cart'),
+        },
+      });
+    } catch {
+      toast.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+    }
   };
 
   if (isLoading || !product) {

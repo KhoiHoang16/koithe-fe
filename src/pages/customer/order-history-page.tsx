@@ -81,7 +81,7 @@ export function OrderHistoryPage() {
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['customer', 'orders'],
-    queryFn: () => orderApi.getOrders(),
+    queryFn: () => orderApi.getMyOrders(),
   });
 
   // Lọc danh sách đơn hàng
@@ -112,24 +112,28 @@ export function OrderHistoryPage() {
   };
 
   // Xử lý đặt lại đơn này
-  const handleReorder = (order: (typeof filteredOrders)[0]) => {
-    order.chiTietList.forEach((item) => {
-      addItem({
-        productId: item.productId,
-        productName: item.productName,
-        productImage: item.productImage,
-        variantId: item.id || 101,
-        variantName: item.variantName || 'Size M',
-        price: item.donGia,
-        sugarLevel: item.duongLevel || '70%',
-        iceLevel: item.daLevel || '50%',
-        toppings: item.toppings || [],
-        quantity: item.soLuong,
-        note: item.ghiChu,
-      });
-    });
-    toast.success(`Đã thêm ${order.chiTietList.length} món vào giỏ hàng!`);
-    navigate('/cart');
+  const handleReorder = async (order: (typeof filteredOrders)[0]) => {
+    try {
+      for (const item of order.chiTietList) {
+        await addItem({
+          productId: item.productId,
+          productName: item.productName,
+          productImage: item.productImage,
+          variantId: item.variantId || item.id || 101,
+          variantName: item.variantName || 'Size M',
+          price: item.donGia,
+          sugarLevel: item.duongLevel || '70%',
+          iceLevel: item.daLevel || '50%',
+          toppings: item.toppings || [],
+          quantity: item.soLuong,
+          note: item.ghiChu,
+        });
+      }
+      toast.success(`Đã thêm ${order.chiTietList.length} món vào giỏ hàng!`);
+      navigate('/cart');
+    } catch {
+      toast.error('Không thể thêm lại vào giỏ hàng. Vui lòng thử lại.');
+    }
   };
 
   if (isLoading) return <LoadingScreen message="Đang tải lịch sử đơn hàng..." />;

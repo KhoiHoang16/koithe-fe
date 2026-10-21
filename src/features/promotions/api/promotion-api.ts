@@ -1,97 +1,98 @@
 import { httpClient } from '@/shared/api/http-client';
-import type { Voucher, ValidateVoucherResult } from '@/shared/types/promotion.types';
+import type { Voucher, ValidateVoucherResult, VoucherDiscountType } from '@/shared/types/promotion.types';
+import type { PageResponse } from '@/shared/types/common.types';
 
-export const MOCK_VOUCHERS: Voucher[] = [
-  {
-    id: 1,
-    maVoucher: 'KOINEW',
-    tenVoucher: 'Giảm 20k cho khách hàng mới',
-    moTa: 'Áp dụng cho đơn hàng từ 100.000đ',
+interface BackendVoucher {
+  id: number;
+  maChuongTrinh: number;
+  maCode: string;
+  loaiGiamGia: 'TIEN_CO_DINH' | 'PHAN_TRAM';
+  giaTriGiam: number;
+  mucGiamToiDa?: number;
+  donHangToiThieu: number;
+  gioiHanSuDung?: number;
+  soLuotDaDung: number;
+}
+
+interface BackendValidateResponse {
+  maCode: string;
+  hopLe: boolean;
+  soTienGiam: number;
+  tongTienSauGiam: number;
+  thongDiep: string;
+}
+
+function mapDiscountType(type: BackendVoucher['loaiGiamGia']): VoucherDiscountType {
+  return type === 'PHAN_TRAM' ? 'PERCENT' : 'FIXED';
+}
+
+function mapVoucher(voucher: BackendVoucher): Voucher {
+  return {
+    id: voucher.id,
+    maVoucher: voucher.maCode,
+    tenVoucher: voucher.maCode,
+    loaiGiamGia: mapDiscountType(voucher.loaiGiamGia),
+    giaTriGiam: Number(voucher.giaTriGiam),
+    giamGiaToiDa: voucher.mucGiamToiDa != null ? Number(voucher.mucGiamToiDa) : undefined,
+    donHangToiThieu: Number(voucher.donHangToiThieu),
+    ngayBatDau: '',
+    ngayKetThuc: '',
+    soLuong: voucher.gioiHanSuDung ?? 0,
+    daSuDung: voucher.soLuotDaDung ?? 0,
+    trangThai: true,
+  };
+}
+
+function minimalVoucher(maCode: string, giamGia: number): Voucher {
+  return {
+    id: 0,
+    maVoucher: maCode,
+    tenVoucher: maCode,
     loaiGiamGia: 'FIXED',
-    giaTriGiam: 20000,
-    donHangToiThieu: 100000,
-    ngayBatDau: '2026-01-01',
-    ngayKetThuc: '2026-12-31',
-    soLuong: 500,
-    daSuDung: 120,
+    giaTriGiam: giamGia,
+    donHangToiThieu: 0,
+    ngayBatDau: '',
+    ngayKetThuc: '',
+    soLuong: 0,
+    daSuDung: 0,
     trangThai: true,
-  },
-  {
-    id: 2,
-    maVoucher: 'HEVIP15',
-    tenVoucher: 'Giảm 15% tổng hóa đơn',
-    moTa: 'Giảm tối đa 30.000đ cho đơn từ 150.000đ',
-    loaiGiamGia: 'PERCENT',
-    giaTriGiam: 15,
-    giamGiaToiDa: 30000,
-    donHangToiThieu: 150000,
-    ngayBatDau: '2026-06-01',
-    ngayKetThuc: '2026-12-31',
-    soLuong: 1000,
-    daSuDung: 430,
-    trangThai: true,
-  },
-  {
-    id: 3,
-    maVoucher: 'FREESHIP',
-    tenVoucher: 'Miễn phí giao hàng 15k',
-    moTa: 'Áp dụng cho mọi đơn giao hàng',
-    loaiGiamGia: 'FIXED',
-    giaTriGiam: 15000,
-    donHangToiThieu: 80000,
-    ngayBatDau: '2026-01-01',
-    ngayKetThuc: '2026-12-31',
-    soLuong: 2000,
-    daSuDung: 890,
-    trangThai: true,
-  },
-];
+  };
+}
 
 export const promotionApi = {
   getVouchers: async (): Promise<Voucher[]> => {
-    try {
-      return (await httpClient.get('/promotions/vouchers')) as Voucher[];
-    } catch {
-      return MOCK_VOUCHERS;
-    }
+    const response = (await httpClient.get('/vouchers')) as unknown as PageResponse<BackendVoucher>;
+    return response.content.map(mapVoucher);
   },
 
   validateVoucher: async (code: string, subtotal: number): Promise<ValidateVoucherResult> => {
-    try {
-      return (await httpClient.post('/promotions/vouchers/validate', {
-        code,
-        subtotal,
-      })) as ValidateVoucherResult;
-    } catch {
-      const voucher = MOCK_VOUCHERS.find((v) => v.maVoucher.toUpperCase() === code.toUpperCase() && v.trangThai);
-      if (!voucher) {
-        return { valid: false, message: 'Mã voucher không tồn tại hoặc đã hết hạn', giamGia: 0 };
-      }
-      if (subtotal < voucher.donHangToiThieu) {
-        return {
-          valid: false,
-          message: `Đơn hàng phải từ ${voucher.donHangToiThieu.toLocaleString('vi-VN')}đ để sử dụng voucher này`,
-          giamGia: 0,
-        };
-      }
-      let discount = 0;
-      if (voucher.loaiGiamGia === 'FIXED') {
-        discount = voucher.giaTriGiam;
-      } else {
-        discount = Math.round((subtotal * voucher.giaTriGiam) / 100);
-        if (voucher.giamGiaToiDa && discount > voucher.giamGiaToiDa) {
-          discount = voucher.giamGiaToiDa;
-        }
-      }
-      return { valid: true, voucher, giamGia: discount, message: 'Áp dụng mã giảm giá thành công!' };
-    }
+    const result = (await httpClient.post('/vouchers/validate', {
+      maCode: code,
+      tongTienDonHang: subtotal,
+    })) as unknown as BackendValidateResponse;
+    return {
+      valid: result.hopLe,
+      message: result.thongDiep,
+      voucher: result.hopLe ? minimalVoucher(result.maCode, Number(result.soTienGiam)) : undefined,
+      giamGia: Number(result.soTienGiam),
+    };
   },
 
   createVoucher: async (data: Partial<Voucher>): Promise<Voucher> => {
-    return (await httpClient.post('/admin/vouchers', data)) as Voucher;
+    const voucher = (await httpClient.post('/vouchers', {
+      maChuongTrinh: 1,
+      maCode: data.maVoucher,
+      loaiGiamGia: data.loaiGiamGia === 'PERCENT' ? 'PHAN_TRAM' : 'TIEN_CO_DINH',
+      giaTriGiam: data.giaTriGiam,
+      mucGiamToiDa: data.giamGiaToiDa,
+      donHangToiThieu: data.donHangToiThieu,
+      gioiHanSuDung: data.soLuong,
+      soLuotDaDung: data.daSuDung ?? 0,
+    })) as unknown as BackendVoucher;
+    return mapVoucher(voucher);
   },
 
   deleteVoucher: async (id: number): Promise<void> => {
-    await httpClient.delete(`/admin/vouchers/${id}`);
+    await httpClient.delete(`/vouchers/${id}`);
   },
 };

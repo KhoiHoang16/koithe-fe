@@ -13,8 +13,23 @@ import { Card } from '@/shared/components/ui/card';
 import { useCartStore } from '@/shared/stores/cart-store';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { orderApi } from '@/features/orders/api/order-api';
+import { paymentApi, type PaymentMethodCode } from '@/features/payment/api/payment-api';
+import { tableApi } from '@/features/tables/api/table-api';
 import { CheckoutStepper } from '@/components/common/checkout-stepper';
-import type { OrderType, PaymentMethod } from '@/shared/types/order.types';
+import type { ServiceType } from '@/shared/types/order.types';
+
+const SERVICE_TYPE_MAP: Record<string, ServiceType> = {
+  DELIVERY: 'GIAO_HANG',
+  TAKEAWAY: 'MANG_VE',
+  AT_TABLE: 'TAI_CHO',
+};
+
+const PAYMENT_METHOD_MAP: Record<string, PaymentMethodCode> = {
+  VNPAY: 'VNPAY',
+  MOMO: 'MOMO',
+  BANK_TRANSFER: 'CHUYEN_KHOAN_QR',
+  COD: 'TIEN_MAT',
+};
 
 const checkoutSchema = z.object({
   loaiDonHang: z.enum(['DELIVERY', 'TAKEAWAY', 'AT_TABLE']),
@@ -58,7 +73,7 @@ export function CheckoutPage() {
       diaChiGiaoHang: '123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
       soBan: '',
       ghiChu: '',
-      phuongThucThanhToan: 'VNPAY',
+      phuongThucThanhToan: user ? 'VNPAY' : 'COD',
     },
   });
 
@@ -79,41 +94,69 @@ export function CheckoutPage() {
       return;
     }
 
+    if (!user && data.phuongThucThanhToan !== 'COD') {
+      toast.error('Vui lòng đăng nhập để thanh toán online');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      const cartToken =
+        typeof localStorage !== 'undefined' ? localStorage.getItem('guest_cart_token') : null;
+      const serviceType = SERVICE_TYPE_MAP[data.loaiDonHang] ?? 'MANG_VE';
+
+      let tableId: number | undefined;
+      if (data.loaiDonHang === 'AT_TABLE') {
+        const tables = await tableApi.getTables();
+        const match = tables.find((t) => t.soBan === data.soBan || String(t.id) === data.soBan);
+        if (!match) throw new Error('Không tìm thấy bàn. Vui lòng kiểm tra lại số bàn.');
+        tableId = match.id;
+      }
+
       const order = await orderApi.createOrder({
-        loaiDonHang: data.loaiDonHang as OrderType,
-        khachHangTen: data.khachHangTen,
-        soDienThoai: data.soDienThoai,
-        email: data.email,
-        diaChiGiaoHang: data.diaChiGiaoHang,
-        soBan: data.soBan,
-        ghiChu: data.ghiChu,
-        phuongThucThanhToan: data.phuongThucThanhToan as PaymentMethod,
-        maVoucher: appliedVoucher?.maVoucher,
-        items: items.map((item) => ({
-          productId: item.productId,
-          variantId: item.variantId,
-          duongLevel: item.sugarLevel,
-          daLevel: item.iceLevel,
-          toppingIds: item.toppings.map((t) => t.id),
-          soLuong: item.quantity,
-          ghiChu: item.note,
-        })),
+        cartToken,
+        serviceType,
+        channel: 'WEBSITE',
+        tableId,
+        tenNguoiNhan: data.khachHangTen,
+        soDienThoaiNguoiNhan: data.soDienThoai,
+        diaChiGiaoHang: data.diaChiGiaoHang || undefined,
       });
 
-      clearCart();
+      const payment = user
+        ? await paymentApi.create({
+            maDonHang: order.id,
+            phuongThucThanhToan: PAYMENT_METHOD_MAP[data.phuongThucThanhToan] ?? 'TIEN_MAT',
+            soTien: order.tongThanhToan,
+          })
+        : await paymentApi.createGuestCash({
+            maDonHang: order.id,
+            cartToken: cartToken ?? '',
+            soTien: order.tongThanhToan,
+          });
+
+      await clearCart();
 
       if (data.phuongThucThanhToan === 'COD') {
         toast.success('Đặt hàng thành công!');
         navigate(`/order-success/${order.id}`);
+      } else if (payment.redirectUrl) {
+        if (data.phuongThucThanhToan === 'BANK_TRANSFER') {
+          navigate(`/checkout/payment?orderId=${order.id}`);
+        } else {
+          window.location.href = payment.redirectUrl;
+        }
       } else {
         toast.info('Đang chuyển sang cổng thanh toán...');
         navigate(`/checkout/payment?orderId=${order.id}`);
       }
-    } catch {
-      toast.error('Không thể hoàn tất đặt hàng. Vui lòng thử lại.');
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Không thể hoàn tất đặt hàng. Vui lòng thử lại.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -269,6 +312,7 @@ export function CheckoutPage() {
                     <input
                       type="radio"
                       value={method.id}
+                      disabled={!user && method.id !== 'COD'}
                       {...register('phuongThucThanhToan')}
                       className="mt-1 accent-primary"
                     />
@@ -277,7 +321,9 @@ export function CheckoutPage() {
                         <span>{method.icon}</span>
                         <span>{method.label}</span>
                       </div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5">{method.desc}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        {!user && method.id !== 'COD' ? 'Đăng nhập để sử dụng' : method.desc}
+                      </div>
                     </div>
                   </label>
                 ))}

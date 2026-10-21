@@ -42,6 +42,7 @@ export interface OrderDetailItem {
   productId: number;
   productName: string;
   productImage?: string;
+  variantId?: number;
   variantName: string;
   donGia: number;
   soLuong: number;
@@ -77,25 +78,19 @@ export interface Order {
   updatedAt?: string;
 }
 
+export type ServiceType = 'TAI_CHO' | 'MANG_VE' | 'GIAO_HANG';
+
+export type OrderChannel = 'WEBSITE' | 'UNG_DUNG_APP' | 'QUET_QR_BAN' | 'TAI_QUAY_POS';
+
 export interface CreateOrderRequest {
-  loaiDonHang: OrderType;
-  khachHangTen: string;
-  soDienThoai: string;
-  email?: string;
+  cartToken?: string | null;
+  customerId?: number;
+  serviceType: ServiceType;
+  channel: OrderChannel;
+  tableId?: number;
+  tenNguoiNhan?: string;
+  soDienThoaiNguoiNhan?: string;
   diaChiGiaoHang?: string;
-  soBan?: string;
-  ghiChu?: string;
-  phuongThucThanhToan: PaymentMethod;
-  maVoucher?: string;
-  items: {
-    productId: number;
-    variantId: number;
-    duongLevel: string;
-    daLevel: string;
-    toppingIds: number[];
-    soLuong: number;
-    ghiChu?: string;
-  }[];
 }
 
 export interface OrderStatusHistory {

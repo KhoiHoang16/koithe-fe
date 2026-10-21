@@ -3,19 +3,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
-import { Eye, EyeOff, Lock, Phone, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Phone, User, AtSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { httpClient } from '@/shared/api/http-client';
+import { authApi } from '@/features/auth/api/auth-api';
 
 const registerSchema = z
   .object({
+    username: z.string().min(3, 'Tên đăng nhập tối thiểu 3 ký tự').max(100, 'Tên đăng nhập quá dài'),
     hoTen: z.string().min(2, 'Họ tên tối thiểu 2 ký tự'),
-    soDienThoai: z.string().min(10, 'Số điện thoại không hợp lệ'),
-    email: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
-    matKhau: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
+    soDienThoai: z.string().optional(),
+    matKhau: z.string().min(8, 'Mật khẩu tối thiểu 8 ký tự'),
     xacNhanMatKhau: z.string(),
   })
   .refine((data) => data.matKhau === data.xacNhanMatKhau, {
@@ -39,16 +39,16 @@ export function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      await httpClient.post('/auth/register', {
-        hoTen: data.hoTen,
-        soDienThoai: data.soDienThoai,
-        email: data.email || undefined,
-        matKhau: data.matKhau,
+      await authApi.register({
+        username: data.username,
+        password: data.matKhau,
+        fullName: data.hoTen,
+        phone: data.soDienThoai || undefined,
       });
       setSuccess(true);
       toast.success('Đăng ký thành công!');
     } catch {
-      toast.error('Số điện thoại đã được đăng ký');
+      toast.error('Tên đăng nhập đã tồn tại hoặc thông tin không hợp lệ');
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +80,23 @@ export function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5" noValidate>
+        <div className="space-y-1.5">
+          <Label htmlFor="reg-username" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
+            Tên đăng nhập
+          </Label>
+          <div className="relative">
+            <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <Input
+              id="reg-username"
+              placeholder="ten_dang_nhap"
+              className="pl-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
+              autoComplete="username"
+              {...register('username')}
+            />
+          </div>
+          {errors.username && <p className="text-xs text-destructive mt-1">{errors.username.message}</p>}
+        </div>
+
         <div className="space-y-1.5">
           <Label htmlFor="reg-name" className="text-xs font-semibold uppercase tracking-wider text-neutral-600">
             Họ và tên
@@ -122,8 +139,9 @@ export function RegisterPage() {
             <Input
               id="reg-password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
+              placeholder="Tối thiểu 8 ký tự"
               className="pl-10 pr-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
+              autoComplete="new-password"
               {...register('matKhau')}
             />
             <button
@@ -149,6 +167,7 @@ export function RegisterPage() {
               type="password"
               placeholder="••••••••"
               className="pl-10 h-11 rounded-xl border-neutral-200 bg-neutral-50/70 focus:bg-white focus-visible:ring-1 focus-visible:ring-primary transition-all"
+              autoComplete="new-password"
               {...register('xacNhanMatKhau')}
             />
           </div>
