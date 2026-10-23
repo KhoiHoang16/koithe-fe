@@ -60,6 +60,10 @@ export const useCartStore = create<CartState>()(
       hydrate: async () => {
         try {
           const cart = await cartApi.getCurrent();
+          const token = readGuestCartToken();
+          if (!cart.cartToken && token) {
+            localStorage.removeItem('guest_cart_token');
+          }
           set({ items: mapCartItems(cart), guestCartToken: readGuestCartToken() });
         } catch {
           set({ guestCartToken: readGuestCartToken() });

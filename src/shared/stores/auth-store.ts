@@ -64,8 +64,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      // Chỉ persist user, KHÔNG persist accessToken (vì ngắn hạn 15 phút)
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      // Persist user và accessToken để giữ trạng thái đăng nhập và Authorization header khi reload trang
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 );

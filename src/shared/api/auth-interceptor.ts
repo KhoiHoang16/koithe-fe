@@ -27,9 +27,9 @@ httpClient.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  // Gắn X-Cart-Token cho guest cart/order request
+  // Gắn X-Cart-Token cho guest cart/order request (hỗ trợ backend merge giỏ guest vào tài khoản khi đã login)
   const isCartOrOrder = /^\/?(?:carts|orders)/.test(config.url ?? '');
-  if (!accessToken && guestCartToken && isCartOrOrder) {
+  if (guestCartToken && isCartOrOrder) {
     config.headers['X-Cart-Token'] = guestCartToken;
   }
 
