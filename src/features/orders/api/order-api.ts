@@ -95,7 +95,7 @@ function mapOrderItem(item: BackendOrderItem): OrderDetailItem {
     soLuong: item.quantity,
     duongLevel: item.sugarLevel ?? '70%',
     daLevel: item.iceLevel ?? '50%',
-    toppings: item.toppings.map(mapTopping),
+    toppings: (item.toppings || []).map(mapTopping),
     thanhTien: Number(item.lineTotal),
     ghiChu: item.note,
   };
@@ -118,7 +118,7 @@ function mapOrder(order: BackendOrder): Order {
     phiGiaoHang: 0,
     giamGia: Number(order.discount),
     tongThanhToan: Number(order.payableTotal),
-    chiTietList: order.items.map(mapOrderItem),
+    chiTietList: (order.items || []).map(mapOrderItem),
     createdAt: order.createdAt,
   };
 }
@@ -152,6 +152,13 @@ export const orderApi = {
 
   getOrderById: async (id: string | number): Promise<Order | null> => {
     const order = (await httpClient.get(`/orders/${id}`)) as unknown as BackendOrder;
+    return mapOrder(order);
+  },
+
+  trackOrder: async (code: string, phone: string): Promise<Order> => {
+    const order = (await httpClient.get('/orders/track', {
+      params: { code, phone },
+    })) as unknown as BackendOrder;
     return mapOrder(order);
   },
 

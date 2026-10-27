@@ -1,10 +1,16 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { CheckCircle2, Package, ShoppingBag } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { CheckoutStepper } from '@/components/common/checkout-stepper';
 
 export function OrderSuccessPage() {
   const { orderId } = useParams();
+  const { state } = useLocation();
+  const displayCode = typeof state?.displayCode === 'string' ? state.displayCode : undefined;
+  const orderReference = displayCode || orderId;
+  const trackLink = displayCode || orderId?.startsWith('DH-')
+    ? `/track-order?code=${encodeURIComponent(displayCode || orderId || '')}`
+    : '/track-order';
 
   return (
     <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed pb-24 animate-fade-in flex flex-col justify-between">
@@ -22,13 +28,13 @@ export function OrderSuccessPage() {
             Đặt hàng thành công! 🎉
           </h1>
           <p className="text-stone-600 text-sm leading-relaxed mb-6">
-            Đơn hàng <strong className="text-stone-900 font-bold">#{orderId}</strong> của bạn đã được chuyển tới Barista KOI Thé để bắt đầu pha chế búp trà tươi hảo hạng.
+            Đơn hàng <strong className="text-stone-900 font-bold">#{orderReference}</strong> của bạn đã được tiếp nhận trên hệ thống KOI Thé.
           </p>
 
           <div className="bg-stone-50 rounded-2xl border border-stone-200/80 p-4 mb-6 text-left space-y-2.5">
             <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-stone-500">Mã đơn hàng:</span>
-              <span className="font-mono font-bold text-stone-900">#{orderId}</span>
+              <span className="font-mono font-bold text-stone-900">#{orderReference}</span>
             </div>
             <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-stone-500">Trạng thái:</span>
@@ -47,7 +53,7 @@ export function OrderSuccessPage() {
               asChild
               className="flex-1 h-12 font-bold text-sm bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl shadow-xs"
             >
-              <Link to={`/orders/${orderId}`}>
+              <Link to={trackLink}>
                 <Package className="mr-2 h-4 w-4" /> Theo dõi đơn hàng
               </Link>
             </Button>

@@ -204,7 +204,7 @@ export function CheckoutPage() {
 
       if (data.phuongThucThanhToan === 'COD') {
         toast.success('Đặt hàng thành công!');
-        navigate(`/order-success/${order.id}`);
+        navigate(`/order-success/${order.id}`, { state: { displayCode: order.maDonHang } });
       } else if (payment.redirectUrl) {
         if (data.phuongThucThanhToan === 'BANK_TRANSFER') {
           navigate(`/checkout/payment?orderId=${order.id}`);
