@@ -1,10 +1,5 @@
-import { PlaceholderPage } from '@/pages/placeholder-page';
+import { SupplierManagement } from '@/features/inventory/components/supplier-management';
 
 export function SuppliersPage() {
-  return (
-    <PlaceholderPage
-      title="Nhà cung cấp"
-      description="Quản lý thông tin nhà cung cấp nguyên liệu và công nợ."
-    />
-  );
+  return <SupplierManagement />;
 }

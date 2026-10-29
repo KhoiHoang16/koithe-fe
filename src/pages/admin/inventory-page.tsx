@@ -1,10 +1,5 @@
-import { PlaceholderPage } from '@/pages/placeholder-page';
+import { InventoryManagement } from '@/features/inventory/components/inventory-management';
 
 export function InventoryPage() {
-  return (
-    <PlaceholderPage
-      title="Quản lý nguyên liệu & Kho"
-      description="Quản lý tồn kho nguyên liệu, định lượng món ăn, nhập/xuất kho."
-    />
-  );
+  return <InventoryManagement />;
 }
