@@ -168,7 +168,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      { path: 'shifts', element: withSuspense(<LazyPages.AdminShiftsPage />) },
       { path: 'tables', element: withSuspense(<LazyPages.AdminTablesPage />) },
       { path: 'inventory', element: withSuspense(<LazyPages.AdminInventoryPage />) },
       { path: 'suppliers', element: withSuspense(<LazyPages.AdminSuppliersPage />) },
@@ -178,6 +177,18 @@ export const router = createBrowserRouter([
   },
 
   // ===================================================================
+  // Ca làm việc: CASHIER chỉ được vào route này, không mở rộng nhóm /admin.
+  // ===================================================================
+  {
+    path: '/admin/shifts',
+    element: (
+      <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'CASHIER']}>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ index: true, element: withSuspense(<LazyPages.AdminShiftsPage />) }],
+  },
+
   // ERROR ROUTES
   // ===================================================================
       { path: '/forbidden', element: withSuspense(<LazyPages.ForbiddenPage />) },
