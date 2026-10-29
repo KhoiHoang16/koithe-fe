@@ -31,4 +31,8 @@ export const paymentApi = {
   createGuestCash: (request: GuestCashPaymentRequest) =>
     api.post<PaymentResponse>('/payments/guest-cash', request),
   getById: (id: number) => api.get<PaymentResponse>(`/payments/${id}`),
+  devSimulateSuccess: (orderId: number, method: PaymentMethodCode) =>
+    api.post<PaymentResponse>('/payments/dev-simulate-success', null, {
+      params: { orderId, method },
+    }),
 };

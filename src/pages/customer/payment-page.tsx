@@ -1,141 +1,337 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Clock, CheckCircle2, Copy } from 'lucide-react';
+import { CheckCircle2, Copy, CreditCard } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
-import { orderApi } from '@/features/orders/api/order-api';
 import { LoadingScreen } from '@/shared/components/feedback/loading-spinner';
+import { ApiError } from '@/shared/api/http-client';
+import { useAuthStore } from '@/shared/stores/auth-store';
+import { orderApi } from '@/features/orders/api/order-api';
+import { paymentApi, type PaymentResponse } from '@/features/payment/api/payment-api';
+import {
+  isPendingPayment,
+  parseVietQr,
+  positiveId,
+  readPaymentSession,
+  safeGatewayUrl,
+} from '@/features/payment/services/payment-session';
+import { formatCurrency } from '@/shared/libs/utils';
 
-function formatVND(amount: number) {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-}
+const METHODS = {
+  CHUYEN_KHOAN_QR: 'Chuyển khoản VietQR',
+  MOMO: 'Ví MoMo',
+  VNPAY: 'Cổng VNPAY',
+  TIEN_MAT: 'Tiền mặt',
+};
 
-export function PaymentPage() {
-  const [searchParams] = useSearchParams();
+export function PaymentPage({ callback = false }: { callback?: boolean }) {
+  const [params] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const orderId = searchParams.get('orderId') || '1001';
+  const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const [imageFailed, setImageFailed] = useState(false);
+  const explicitOrderId = positiveId(params.get('orderId'));
+  const lastPayment = callback ? readPaymentSession(user?.id) : null;
+  const providerReference = params.get('vnp_TxnRef') || params.get('orderId');
+  const correlatedPayment =
+    lastPayment && providerReference === lastPayment.noiDungVietqr ? lastPayment : null;
+  const orderId = explicitOrderId ?? correlatedPayment?.maDonHang ?? null;
+  const saved = readPaymentSession(user?.id, orderId);
+  const paymentId = params.has('paymentId')
+    ? positiveId(params.get('paymentId'))
+    : (saved?.id ?? correlatedPayment?.id ?? null);
+  const initialPayment = location.state?.payment as PaymentResponse | undefined;
+  const cached =
+    initialPayment?.id === paymentId && initialPayment?.maDonHang === orderId
+      ? initialPayment
+      : saved;
+  const validIds = !!orderId && !!paymentId;
 
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 phút
-  const [isVerifying, setIsVerifying] = useState(false);
-
-  const { data: order, isLoading } = useQuery({
-    queryKey: ['order', orderId],
-    queryFn: () => orderApi.getOrderById(orderId),
+  const orderQuery = useQuery({
+    queryKey: ['payment', 'order', user?.id, orderId],
+    queryFn: () => orderApi.getOrderById(orderId!),
+    enabled: validIds && !!accessToken,
+    retry: false,
   });
-
-  // Countdown timer
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-  const timeFormatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-  const handleSimulatePayment = async () => {
-    setIsVerifying(true);
-    toast.info('Đang kiểm tra giao dịch thanh toán...');
-    try {
-      const res = await orderApi.verifyPayment(orderId);
-      if (res.trangThai === 'THANH_CONG') {
-        toast.success('Thanh toán thành công!');
-        navigate(`/order-success/${orderId}`, { replace: true });
-      } else {
-        toast.error('Giao dịch chưa hoàn tất');
+  const paymentQuery = useQuery({
+    queryKey: ['payment', 'detail', user?.id, orderId, paymentId],
+    queryFn: async () => {
+      const payment = await paymentApi.getById(paymentId!);
+      if (
+        payment.id !== paymentId ||
+        payment.maDonHang !== orderId ||
+        Number(payment.soTien) !== orderQuery.data?.tongThanhToan
+      ) {
+        throw new Error('Giao dịch không khớp với đơn hàng.');
       }
+      return payment;
+    },
+    enabled: validIds && !!accessToken && !!orderQuery.data,
+    retry: false,
+    refetchInterval: (query) =>
+      query.state.error || orderQuery.data?.trangThai === 'CANCELLED'
+        ? false
+        : isPendingPayment(query.state.data?.trangThai ?? '')
+          ? 3000
+          : false,
+  });
+  const payment = paymentQuery.data;
+  const order = orderQuery.data;
+  const cancelled = order?.trangThai === 'CANCELLED';
+  const pending = !!payment && !cancelled && isPendingPayment(payment.trangThai);
+  const successful = !cancelled && payment?.trangThai === 'THANH_CONG';
+  const error = orderQuery.error || paymentQuery.error;
+  const compatibleCache =
+    cached?.id === payment?.id &&
+    cached?.maDonHang === payment?.maDonHang &&
+    cached?.phuongThucThanhToan === payment?.phuongThucThanhToan &&
+    Number(cached?.soTien) === Number(payment?.soTien) &&
+    cached?.noiDungVietqr === payment?.noiDungVietqr;
+  const redirectUrl = payment?.redirectUrl || (compatibleCache ? cached?.redirectUrl : undefined);
+  const qr =
+    payment?.phuongThucThanhToan === 'CHUYEN_KHOAN_QR'
+      ? parseVietQr(redirectUrl, Number(payment.soTien))
+      : null;
+  const gatewayUrl = safeGatewayUrl(redirectUrl);
+
+  useEffect(() => {
+    if (successful && orderId) navigate('/order-success/' + orderId, { replace: true });
+  }, [successful, orderId, navigate]);
+
+  const simulate = useMutation({
+    mutationFn: async () => {
+      if (
+        !import.meta.env.DEV ||
+        !payment ||
+        !pending ||
+        !orderId ||
+        payment.phuongThucThanhToan === 'TIEN_MAT'
+      ) {
+        throw new Error('Không thể mô phỏng giao dịch này.');
+      }
+      await paymentApi.devSimulateSuccess(orderId, payment.phuongThucThanhToan);
+      const verified = await paymentQuery.refetch();
+      if (verified.error) throw verified.error;
+      if (verified.data?.trangThai !== 'THANH_CONG')
+        throw new Error('Giao dịch chưa được xác nhận thành công.');
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : 'Không thể mô phỏng thanh toán.'),
+  });
+  const verify = async () => {
+    const result = await paymentQuery.refetch();
+    if (result.error) toast.error('Chưa thể kiểm tra giao dịch. Vui lòng thử lại.');
+    else if (result.data?.trangThai === 'THANH_CONG') toast.success('Thanh toán thành công!');
+    else if (isPendingPayment(result.data?.trangThai ?? ''))
+      toast.info('Giao dịch đang chờ thanh toán.');
+    else toast.error('Giao dịch chưa thành công. Vui lòng liên hệ nhân viên.');
+  };
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Đã sao chép.');
     } catch {
-      toast.error('Không thể xác minh giao dịch');
-    } finally {
-      setIsVerifying(false);
+      toast.error('Không thể sao chép. Vui lòng sao chép thủ công.');
     }
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Đã sao chép vào bộ nhớ tạm');
-  };
+  let message: string | null = null;
+  if (!validIds)
+    message =
+      'Thiếu hoặc sai mã đơn/giao dịch thanh toán. Vui lòng mở trang thanh toán từ đơn hàng vừa đặt.';
+  else if (!accessToken)
+    message = 'Vui lòng đăng nhập bằng tài khoản đã đặt đơn để xem giao dịch thanh toán.';
+  else if (error instanceof ApiError && [403, 404].includes(error.code))
+    message = 'Không tìm thấy đơn/giao dịch hoặc bạn không có quyền xem.';
+  else if (error) message = 'Không thể tải thông tin thanh toán. Vui lòng thử lại.';
 
-  if (isLoading || !order) {
-    return <LoadingScreen message="Đang khởi tạo cổng thanh toán QR..." />;
-  }
-
-  return (
-    <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed py-12 animate-fade-in flex flex-col justify-center">
-      <div className="container mx-auto px-4 max-w-xl">
-        <Card className="p-6 sm:p-8 text-center space-y-6 shadow-sm border border-white/80 bg-white/95 backdrop-blur-md rounded-3xl">
-          {/* Header Badge */}
-          <div className="flex items-center justify-between border-b pb-4">
-            <div className="text-left">
-              <span className="text-xs text-muted-foreground">Mã đơn hàng</span>
-              <div className="font-bold text-sm text-foreground">{order.maDonHang}</div>
-            </div>
-            <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 gap-1 rounded-lg">
-              <Clock className="h-3.5 w-3.5" /> Hạn thanh toán: {timeFormatted}
-            </Badge>
-          </div>
-
-          {/* QR Code Container */}
-          <div className="space-y-3">
-            <h2 className="text-lg font-bold">Quét mã QR để thanh toán</h2>
-            <p className="text-xs text-muted-foreground">Mở ứng dụng ngân hàng hoặc ví điện tử để quét mã</p>
-
-            <div className="mx-auto w-60 h-60 bg-white p-4 rounded-2xl border-2 border-primary/20 shadow-xs flex flex-col items-center justify-center">
-              {/* VietQR Mock Image */}
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=KOITHE_ORDER_${order.maDonHang}`}
-                alt="Payment QR Code"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            <div className="text-2xl font-bold text-primary">{formatVND(order.tongThanhToan)}</div>
-          </div>
-
-          {/* Payment Account Transfer Details */}
-          <div className="bg-stone-50/80 p-4 rounded-2xl text-xs space-y-2 text-left border border-stone-200/80">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Ngân hàng:</span>
-              <span className="font-semibold">MBBank (Ngân hàng Quân Đội)</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Số tài khoản:</span>
-              <div className="flex items-center gap-1 font-mono font-bold">
-                <span>999988887777</span>
-                <Button variant="ghost" size="icon-sm" onClick={() => handleCopy('999988887777')}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Nội dung chuyển khoản:</span>
-              <div className="flex items-center gap-1 font-mono font-bold text-primary">
-                <span>{order.maDonHang}</span>
-                <Button variant="ghost" size="icon-sm" onClick={() => handleCopy(order.maDonHang)}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3 pt-2">
-            <Button size="lg" className="w-full h-12 rounded-2xl font-bold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer" onClick={handleSimulatePayment} isLoading={isVerifying}>
-              <CheckCircle2 className="h-5 w-5" /> Tôi đã thanh toán xong
-            </Button>
-
-            <Button variant="outline" size="sm" className="w-full h-10 text-xs rounded-xl border-stone-200 text-stone-600 hover:bg-stone-100" onClick={() => navigate('/menu')}>
-              Hủy và quay lại mua sắm
+  if (message)
+    return (
+      <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center px-4 py-12">
+        <Card
+          className="mx-auto max-w-xl rounded-3xl bg-white/95 p-6 sm:p-8 space-y-4"
+          role="alert"
+        >
+          <h1 className="text-xl font-bold">Chưa thể mở thanh toán</h1>
+          <p className="text-sm text-stone-600">{message}</p>
+          <div className="flex flex-wrap gap-3">
+            {!accessToken && validIds && (
+              <Button asChild>
+              <Link to="/login" state={{ from: { pathname: location.pathname + location.search } }}>
+                  Đăng nhập
+                </Link>
+              </Button>
+            )}
+            {!!error && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (orderQuery.error) void orderQuery.refetch();
+                  else void paymentQuery.refetch();
+                }}
+              >
+                Thử lại
+              </Button>
+            )}
+            <Button variant="outline" asChild>
+              <Link to="/menu">Về thực đơn</Link>
             </Button>
           </div>
         </Card>
       </div>
+    );
+  if (!payment || !order || successful)
+    return (
+      <LoadingScreen
+        message={
+          successful
+            ? 'Thanh toán thành công, đang chuyển trang...'
+            : 'Đang tải thông tin thanh toán...'
+        }
+      />
+    );
+
+  return (
+    <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center bg-fixed px-4 py-10">
+      <Card className="mx-auto max-w-xl rounded-3xl bg-white/95 backdrop-blur-md p-6 sm:p-8 space-y-6 text-center">
+        <div className="flex flex-wrap justify-between gap-3 border-b pb-4 text-left">
+          <div>
+            <p className="text-xs text-stone-500">Mã đơn hàng</p>
+            <p className="font-bold break-all">{order.maDonHang}</p>
+          </div>
+          <Badge variant="secondary">
+            {cancelled
+              ? 'Đơn hàng đã hủy'
+              : pending
+                ? 'Chờ thanh toán'
+                : payment.trangThai === 'THAT_BAI'
+                  ? 'Thanh toán thất bại'
+                  : 'Giao dịch chưa hoàn tất'}
+          </Badge>
+        </div>
+        <h1 className="text-xl font-bold flex justify-center items-center gap-2">
+          <CreditCard className="h-5 w-5 text-primary" />
+          {METHODS[payment.phuongThucThanhToan] || 'Thanh toán'}
+        </h1>
+        <p className="text-3xl font-bold text-primary">{formatCurrency(Number(payment.soTien))}</p>
+        {pending ? (
+          payment.phuongThucThanhToan === 'CHUYEN_KHOAN_QR' ? (
+            qr ? (
+              <div className="space-y-4">
+                {imageFailed ? (
+                  <p role="alert" className="text-sm text-destructive">
+                    Không tải được ảnh QR. Vui lòng kiểm tra mạng và tải lại trang.
+                  </p>
+                ) : (
+                  <img
+                    src={qr.imageUrl}
+                    alt="Mã VietQR chuyển khoản cho đơn hàng"
+                    referrerPolicy="no-referrer"
+                    onError={() => setImageFailed(true)}
+                    className="mx-auto w-full max-w-72 rounded-2xl border bg-white p-2"
+                  />
+                )}
+                <div className="rounded-2xl border bg-stone-50 p-4 text-left text-sm space-y-3 break-words">
+                  <p>
+                    Ngân hàng: <strong>{qr.bank}</strong>
+                  </p>
+                  {!!qr.accountName && (
+                    <p>
+                      Chủ tài khoản: <strong>{qr.accountName}</strong>
+                    </p>
+                  )}
+                  <div className="flex justify-between items-center gap-2">
+                    <p>
+                      Số tài khoản: <strong className="break-all">{qr.account}</strong>
+                    </p>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="Sao chép số tài khoản"
+                      onClick={() => void copy(qr.account)}
+                    >
+                      <Copy />
+                    </Button>
+                  </div>
+                  <div className="flex justify-between items-center gap-2">
+                    <p>
+                      Nội dung: <strong className="break-all">{qr.content}</strong>
+                    </p>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label="Sao chép nội dung chuyển khoản"
+                      onClick={() => void copy(qr.content)}
+                    >
+                      <Copy />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-stone-500">
+                  Chuyển đúng số tiền và nội dung trên mã QR. Trạng thái được cập nhật khi hệ thống
+                  xác nhận giao dịch.
+                </p>
+              </div>
+            ) : (
+              <p role="alert" className="text-sm text-stone-600">
+                Chưa có mã QR hợp lệ cho giao dịch này. Vui lòng liên hệ nhân viên để kiểm tra;
+                không cần tạo lại đơn.
+              </p>
+            )
+          ) : payment.phuongThucThanhToan === 'MOMO' || payment.phuongThucThanhToan === 'VNPAY' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-stone-600">
+                Tiếp tục tại cổng thanh toán, sau đó quay lại đây để kiểm tra kết quả.
+              </p>
+              {gatewayUrl ? (
+                <Button asChild className="w-full">
+                  <a href={gatewayUrl}>Tiếp tục với {METHODS[payment.phuongThucThanhToan]}</a>
+                </Button>
+              ) : (
+                <p role="alert" className="text-sm text-stone-600">
+                  Chưa có đường dẫn thanh toán. Vui lòng liên hệ nhân viên để kiểm tra giao dịch.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm">Vui lòng thanh toán tiền mặt tại quầy.</p>
+          )
+        ) : (
+          <p role="alert" className="text-sm text-destructive">
+            Giao dịch chưa thành công. Vui lòng liên hệ nhân viên trước khi thực hiện thanh toán
+            khác.
+          </p>
+        )}
+        <div className="space-y-3">
+          <Button
+            className="w-full rounded-xl h-12 whitespace-normal"
+            onClick={() => void verify()}
+            isLoading={paymentQuery.isFetching}
+            disabled={simulate.isPending}
+          >
+            <CheckCircle2 />
+            {pending ? 'Tôi đã thanh toán xong' : 'Kiểm tra lại trạng thái'}
+          </Button>
+          {import.meta.env.DEV && pending && payment.phuongThucThanhToan !== 'TIEN_MAT' && (
+            <Button
+              variant="outline"
+              className="w-full h-auto min-h-11 whitespace-normal rounded-xl"
+              onClick={() => simulate.mutate()}
+              isLoading={simulate.isPending}
+              disabled={paymentQuery.isFetching}
+            >
+              ⚡ Mô phỏng thanh toán thành công (Dev Test)
+            </Button>
+          )}
+          <Button asChild variant="ghost" className="w-full">
+            <Link to="/menu">Về thực đơn</Link>
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }
