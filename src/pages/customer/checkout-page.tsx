@@ -222,7 +222,7 @@ export function CheckoutPage() {
       createdOrderCode = order.maDonHang || String(order.id);
 
       if (data.loaiDonHang === 'AT_TABLE') {
-        createdTableCode = order.maDonHang || String(order.id);
+
         clearTable();
       }
 

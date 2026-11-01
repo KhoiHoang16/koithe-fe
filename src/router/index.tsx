@@ -166,7 +166,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      { path: 'shifts', element: withSuspense(<LazyPages.AdminShiftsPage />) },
+
       { path: 'tables', element: withSuspense(<LazyPages.AdminTablesPage />) },
       { path: 'inventory', element: withSuspense(<LazyPages.AdminInventoryPage />) },
       { path: 'suppliers', element: withSuspense(<LazyPages.AdminSuppliersPage />) },
@@ -176,7 +176,7 @@ export const router = createBrowserRouter([
   },
 
   // ===================================================================
-  // Customer management is the only admin area also available to cashiers.
+  // Customer management and shifts are available to cashiers.
   // Other admin routes retain their existing ADMIN/MANAGER guard.
   {
     element: (
@@ -185,6 +185,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { path: '/admin/shifts', element: withSuspense(<LazyPages.AdminShiftsPage />) },
       { path: '/admin/customers', element: withSuspense(<LazyPages.AdminCustomersPage />) },
       { path: '/admin/customers/:id', element: withSuspense(<LazyPages.AdminCustomerDetailPage />) },
     ],

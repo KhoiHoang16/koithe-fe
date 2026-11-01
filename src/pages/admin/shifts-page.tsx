@@ -1,10 +1,9 @@
-import { PlaceholderPage } from '@/pages/placeholder-page';
+import { ShiftManagement } from '@/features/shift/components/shift-management';
+import { useAuthStore } from '@/shared/stores/auth-store';
 
 export function ShiftsPage() {
-  return (
-    <PlaceholderPage
-      title="Quản lý Ca làm / Giao ca"
-      description="Quản lý lịch phân ca, mở/đóng ca làm việc và đối soát tiền mặt ca."
-    />
-  );
+  const user = useAuthStore((state) => state.user);
+  return user ? (
+    <ShiftManagement key={`${user.id}-${user.vaiTro}`} userId={user.id} role={user.vaiTro} />
+  ) : null;
 }
