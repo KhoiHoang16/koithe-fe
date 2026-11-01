@@ -30,6 +30,7 @@ import { paymentApi, type PaymentMethodCode } from '@/features/payment/api/payme
 import { tableApi } from '@/features/tables/api/table-api';
 import { useTableSessionStore } from '@/features/tables/stores/table-session-store';
 import { ApiError } from '@/shared/api/http-client';
+import { savePaymentSession } from '@/features/payment/services/payment-session';
 import { CheckoutStepper } from '@/components/common/checkout-stepper';
 import type { ServiceType } from '@/shared/types/order.types';
 
@@ -120,7 +121,7 @@ export function CheckoutPage() {
   const { items, appliedVoucher, voucherDiscount, getSubtotal, getTotal, clearCart } = useCartStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [failedTableOrder, setFailedTableOrder] = useState<string | null>(null);
+  const [createdOrderError, setCreatedOrderError] = useState<string | null>(null);
 
   const subtotal = getSubtotal();
 
@@ -155,7 +156,7 @@ export function CheckoutPage() {
   const finalTotal = getTotal(shippingFee);
 
   const onSubmit = async (data: CheckoutFormData) => {
-    if (isSubmitting || failedTableOrder) return;
+    if (isSubmitting || createdOrderError) return;
     if (data.loaiDonHang === 'AT_TABLE' && !tableSession) {
       toast.error('Vui lòng quét lại mã QR tại bàn trước khi đặt món.');
       return;
@@ -176,7 +177,7 @@ export function CheckoutPage() {
     }
 
     setIsSubmitting(true);
-    let createdTableCode: string | null = null;
+    let createdOrderCode: string | null = null;
 
     try {
       if (data.loaiDonHang === 'AT_TABLE' && tableSession) {
@@ -218,6 +219,7 @@ export function CheckoutPage() {
         soDienThoaiNguoiNhan: data.soDienThoai,
         diaChiGiaoHang: finalDeliveryAddress,
       });
+      createdOrderCode = order.maDonHang || String(order.id);
 
       if (data.loaiDonHang === 'AT_TABLE') {
         createdTableCode = order.maDonHang || String(order.id);
@@ -229,6 +231,7 @@ export function CheckoutPage() {
             maDonHang: order.id,
             phuongThucThanhToan: PAYMENT_METHOD_MAP[data.phuongThucThanhToan] ?? 'TIEN_MAT',
             soTien: order.tongThanhToan,
+            noiDungVietqr: data.phuongThucThanhToan === 'COD' ? undefined : 'KOITHE ' + order.maDonHang.replace(/-/g, ''),
           })
         : await paymentApi.createGuestCash({
             maDonHang: order.id,
@@ -236,26 +239,21 @@ export function CheckoutPage() {
             soTien: order.tongThanhToan,
           });
 
-      await clearCart();
+      if (user && data.phuongThucThanhToan !== 'COD') savePaymentSession(user.id, payment);
+      try {
+        await clearCart();
+      } catch {
+        toast.info('Đơn đã tạo. Giỏ hàng sẽ được cập nhật khi tải lại trang.');
+      }
 
       if (data.phuongThucThanhToan === 'COD') {
         toast.success('Đặt hàng thành công!');
         navigate(`/order-success/${order.id}`, { state: { displayCode: order.maDonHang } });
-      } else if (payment.redirectUrl) {
-        if (data.phuongThucThanhToan === 'BANK_TRANSFER') {
-          navigate(`/checkout/payment?orderId=${order.id}`);
-        } else {
-          window.location.href = payment.redirectUrl;
-        }
       } else {
-        toast.info('Đang chuyển sang cổng thanh toán...');
-        navigate(`/checkout/payment?orderId=${order.id}`);
+        navigate(`/checkout/payment?orderId=${order.id}&paymentId=${payment.id}`, { state: { payment } });
       }
     } catch (error) {
-      if (createdTableCode) {
-        // The backend has already consumed this cart. Do not offer to create another order.
-        setFailedTableOrder(createdTableCode);
-      }
+      if (createdOrderCode) setCreatedOrderError(createdOrderCode);
       toast.error(
         error instanceof Error && error.message
           ? error.message
@@ -266,17 +264,15 @@ export function CheckoutPage() {
     }
   };
 
-  if (failedTableOrder) {
-    return (
-      <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center py-12 px-4">
-        <Card className="max-w-lg mx-auto p-6 rounded-3xl space-y-4 bg-white/95" role="alert">
-          <h1 className="text-xl font-bold">Đơn hàng đã được tạo</h1>
-          <p className="text-sm break-words">Mã đơn: <strong>{failedTableOrder}</strong>. Chưa thể hoàn tất bước tiếp theo. Vui lòng liên hệ nhân viên tại quầy để kiểm tra trước khi đặt thêm đơn.</p>
-          <Button asChild variant="outline"><Link to="/menu">Về thực đơn</Link></Button>
-        </Card>
-      </div>
-    );
-  }
+  if (createdOrderError) return (
+    <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center px-4 py-12">
+      <Card className="mx-auto max-w-xl rounded-3xl bg-white/95 p-6 space-y-4" role="alert">
+        <h1 className="text-xl font-bold">Đơn hàng đã được tạo</h1>
+        <p className="text-sm break-words">Mã đơn {createdOrderError}. Chưa khởi tạo được giao dịch thanh toán. Vui lòng liên hệ nhân viên để kiểm tra, tránh đặt lại đơn.</p>
+        <Button asChild variant="outline"><Link to="/menu">Về thực đơn</Link></Button>
+      </Card>
+    </div>
+  );
 
   if (items.length === 0) {
     return (
