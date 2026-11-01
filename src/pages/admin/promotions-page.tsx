@@ -1,10 +1,5 @@
-import { PlaceholderPage } from '@/pages/placeholder-page';
+import { ProgramManagement } from '@/features/promotions/components/program-management';
 
 export function PromotionsPage() {
-  return (
-    <PlaceholderPage
-      title="Chương trình khuyến mãi"
-      description="Quản lý các chương trình ưu đãi, giảm giá sản phẩm, mua 1 tặng 1."
-    />
-  );
+  return <ProgramManagement />;
 }

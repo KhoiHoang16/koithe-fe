@@ -1,5 +1,19 @@
-import { httpClient } from '@/shared/api/http-client';
-import type { Voucher, ValidateVoucherResult, VoucherDiscountType } from '@/shared/types/promotion.types';
+import { httpClient, api } from '@/shared/api/http-client';
+import {
+  validateVoucher,
+  programStatus,
+  sameProgram,
+  type ManagedVoucher,
+  type PromotionProgram,
+  type PromotionPage,
+  type ProgramInput,
+  type VoucherInput,
+} from '../lib/admin-promotion';
+import type {
+  Voucher,
+  ValidateVoucherResult,
+  VoucherDiscountType,
+} from '@/shared/types/promotion.types';
 import type { PageResponse } from '@/shared/types/common.types';
 
 interface BackendVoucher {
@@ -94,5 +108,49 @@ export const promotionApi = {
 
   deleteVoucher: async (id: number): Promise<void> => {
     await httpClient.delete(`/vouchers/${id}`);
+  },
+};
+
+// Adapter quản trị riêng; giữ nguyên API áp dụng voucher ở luồng khách hàng.
+export const promotionManagementApi = {
+  vouchers: (page = 0) =>
+    api.get<PromotionPage<ManagedVoucher>>('/vouchers', { params: { page, size: 20 } }),
+  programs: (page = 0) =>
+    api.get<PromotionPage<PromotionProgram>>('/promotion-programs', { params: { page, size: 20 } }),
+  program: (id: number) => api.get<PromotionProgram>(`/promotion-programs/${id}`),
+  createProgram: (input: ProgramInput) => api.post<PromotionProgram>('/promotion-programs', input),
+  deleteProgram: (id: number) => api.delete(`/promotion-programs/${id}`),
+  updateProgram: async (id: number, input: ProgramInput, original: PromotionProgram) => {
+    const latest = await promotionManagementApi.program(id);
+    if (!sameProgram(latest, original))
+      throw new Error(
+        'Chương trình đã được cập nhật ở nơi khác. Vui lòng đóng form và tải lại trước khi sửa.',
+      );
+    return api.put<PromotionProgram>(`/promotion-programs/${id}`, input);
+  },
+  createVoucher: (input: VoucherInput) =>
+    api.post<ManagedVoucher>('/vouchers', { ...validateVoucher(input), soLuotDaDung: 0 }),
+  updateVoucher: async (id: number, input: VoucherInput) => {
+    const validated = validateVoucher(input);
+    const current = await api.get<ManagedVoucher>(`/vouchers/${id}`);
+    const program = await promotionManagementApi.program(current.maChuongTrinh);
+    if (programStatus(program) === 'Đang diễn ra')
+      throw new Error(
+        'Chưa thể sửa voucher đang diễn ra vì BE chưa bảo vệ số lượt sử dụng khi cập nhật.',
+      );
+    if (validated.gioiHanSuDung !== null && validated.gioiHanSuDung < current.soLuotDaDung)
+      throw new Error('Số lượng phát hành không được nhỏ hơn số lượt đã dùng.');
+    return api.put<ManagedVoucher>(`/vouchers/${id}`, {
+      ...validated,
+      soLuotDaDung: current.soLuotDaDung,
+    });
+  },
+  deleteVoucher: (id: number) => api.delete(`/vouchers/${id}`),
+  programOptions: async () => {
+    const first = await promotionManagementApi.programs();
+    const rows = [...first.content];
+    for (let page = 1; page < first.totalPages; page++)
+      rows.push(...(await promotionManagementApi.programs(page)).content);
+    return rows;
   },
 };
