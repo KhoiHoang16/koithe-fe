@@ -26,6 +26,11 @@ function mapTable(table: BackendTable): StoreTable {
 }
 
 export const tableApi = {
+  getByQrToken: async (token: string): Promise<StoreTable> => {
+    const table = (await httpClient.get(`/tables/qr/${encodeURIComponent(token)}`)) as unknown as BackendTable;
+    return mapTable(table);
+  },
+
   getTables: async (): Promise<StoreTable[]> => {
     const tables = (await httpClient.get('/tables')) as unknown as BackendTable[];
     return tables.map(mapTable);

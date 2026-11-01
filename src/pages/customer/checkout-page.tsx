@@ -27,6 +27,9 @@ import { useCartStore } from '@/shared/stores/cart-store';
 import { useAuthStore } from '@/shared/stores/auth-store';
 import { orderApi } from '@/features/orders/api/order-api';
 import { paymentApi, type PaymentMethodCode } from '@/features/payment/api/payment-api';
+import { tableApi } from '@/features/tables/api/table-api';
+import { useTableSessionStore } from '@/features/tables/stores/table-session-store';
+import { ApiError } from '@/shared/api/http-client';
 import { CheckoutStepper } from '@/components/common/checkout-stepper';
 import type { ServiceType } from '@/shared/types/order.types';
 
@@ -64,9 +67,10 @@ const PICKUP_TIMES = [
   'Sau 1 tiếng',
 ];
 
-const SERVICE_TYPE_MAP: Record<'DELIVERY' | 'TAKEAWAY', ServiceType> = {
+const SERVICE_TYPE_MAP: Record<'DELIVERY' | 'TAKEAWAY' | 'AT_TABLE', ServiceType> = {
   DELIVERY: 'GIAO_HANG',
   TAKEAWAY: 'MANG_VE',
+  AT_TABLE: 'TAI_CHO',
 };
 
 const PAYMENT_METHOD_MAP: Record<string, PaymentMethodCode> = {
@@ -78,7 +82,7 @@ const PAYMENT_METHOD_MAP: Record<string, PaymentMethodCode> = {
 
 const checkoutSchema = z
   .object({
-    loaiDonHang: z.enum(['TAKEAWAY', 'DELIVERY']),
+    loaiDonHang: z.enum(['TAKEAWAY', 'DELIVERY', 'AT_TABLE']),
     khachHangTen: z.string().min(2, 'Vui lòng nhập họ tên đầy đủ'),
     soDienThoai: z.string().regex(/(84|0[3|5|7|8|9])+([0-9]{8})\b/, 'Số điện thoại không hợp lệ'),
     email: z.string().email('Email không đúng định dạng').optional().or(z.literal('')),
@@ -111,9 +115,12 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const accessToken = useAuthStore((state) => state.accessToken);
+  const tableSession = useTableSessionStore((state) => state.table);
+  const clearTable = useTableSessionStore((state) => state.clearTable);
   const { items, appliedVoucher, voucherDiscount, getSubtotal, getTotal, clearCart } = useCartStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [failedTableOrder, setFailedTableOrder] = useState<string | null>(null);
 
   const subtotal = getSubtotal();
 
@@ -126,7 +133,7 @@ export function CheckoutPage() {
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      loaiDonHang: 'TAKEAWAY',
+      loaiDonHang: tableSession ? 'AT_TABLE' : 'TAKEAWAY',
       khachHangTen: user?.hoTen || '',
       soDienThoai: user?.soDienThoai || '',
       email: user?.email || '',
@@ -144,10 +151,15 @@ export function CheckoutPage() {
 
   // Tính phí ship: Miễn phí nếu là Đến lấy, hoặc đơn giao hàng >= 150.000₫
   const isFreeShipDelivery = subtotal >= 150000;
-  const shippingFee = selectedLoaiDonHang === 'TAKEAWAY' ? 0 : isFreeShipDelivery ? 0 : 15000;
+  const shippingFee = selectedLoaiDonHang !== 'DELIVERY' ? 0 : isFreeShipDelivery ? 0 : 15000;
   const finalTotal = getTotal(shippingFee);
 
   const onSubmit = async (data: CheckoutFormData) => {
+    if (isSubmitting || failedTableOrder) return;
+    if (data.loaiDonHang === 'AT_TABLE' && !tableSession) {
+      toast.error('Vui lòng quét lại mã QR tại bàn trước khi đặt món.');
+      return;
+    }
     if (items.length === 0) {
       toast.error('Giỏ hàng trống');
       return;
@@ -164,8 +176,24 @@ export function CheckoutPage() {
     }
 
     setIsSubmitting(true);
+    let createdTableCode: string | null = null;
 
     try {
+      if (data.loaiDonHang === 'AT_TABLE' && tableSession) {
+        try {
+          const verifiedTable = await tableApi.getByQrToken(tableSession.token);
+          if (verifiedTable.id !== tableSession.tableId) {
+            clearTable();
+            throw new Error('Thông tin bàn đã thay đổi. Vui lòng quét lại mã QR tại bàn.');
+          }
+        } catch (error) {
+          if (error instanceof ApiError && [400, 404].includes(error.code)) {
+            clearTable();
+            throw new Error('Mã QR bàn không còn hợp lệ. Vui lòng quét lại mã tại bàn.');
+          }
+          throw error;
+        }
+      }
       // Đã đăng nhập: backend tự lấy giỏ của tài khoản. Chỉ guest mới truyền cartToken.
       const cartToken =
         !accessToken && typeof localStorage !== 'undefined'
@@ -177,16 +205,24 @@ export function CheckoutPage() {
       const finalDeliveryAddress =
         data.loaiDonHang === 'DELIVERY'
           ? data.diaChiGiaoHang
-          : `[Đến lấy] Chi nhánh: ${data.chiNhanh || STORES[0].name} | Giờ hẹn: ${data.thoiGianNhan || 'Sớm nhất'}`;
+          : data.loaiDonHang === 'AT_TABLE'
+            ? undefined
+            : `[Đến lấy] Chi nhánh: ${data.chiNhanh || STORES[0].name} | Giờ hẹn: ${data.thoiGianNhan || 'Sớm nhất'}`;
 
       const order = await orderApi.createOrder({
         cartToken,
         serviceType,
-        channel: 'WEBSITE',
+        channel: data.loaiDonHang === 'AT_TABLE' ? 'QUET_QR_BAN' : 'WEBSITE',
+        tableId: data.loaiDonHang === 'AT_TABLE' ? tableSession?.tableId : undefined,
         tenNguoiNhan: data.khachHangTen,
         soDienThoaiNguoiNhan: data.soDienThoai,
         diaChiGiaoHang: finalDeliveryAddress,
       });
+
+      if (data.loaiDonHang === 'AT_TABLE') {
+        createdTableCode = order.maDonHang || String(order.id);
+        clearTable();
+      }
 
       const payment = user
         ? await paymentApi.create({
@@ -216,6 +252,10 @@ export function CheckoutPage() {
         navigate(`/checkout/payment?orderId=${order.id}`);
       }
     } catch (error) {
+      if (createdTableCode) {
+        // The backend has already consumed this cart. Do not offer to create another order.
+        setFailedTableOrder(createdTableCode);
+      }
       toast.error(
         error instanceof Error && error.message
           ? error.message
@@ -225,6 +265,18 @@ export function CheckoutPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (failedTableOrder) {
+    return (
+      <div className="min-h-screen bg-[url('/checkout-bg.png')] bg-cover bg-center py-12 px-4">
+        <Card className="max-w-lg mx-auto p-6 rounded-3xl space-y-4 bg-white/95" role="alert">
+          <h1 className="text-xl font-bold">Đơn hàng đã được tạo</h1>
+          <p className="text-sm break-words">Mã đơn: <strong>{failedTableOrder}</strong>. Chưa thể hoàn tất bước tiếp theo. Vui lòng liên hệ nhân viên tại quầy để kiểm tra trước khi đặt thêm đơn.</p>
+          <Button asChild variant="outline"><Link to="/menu">Về thực đơn</Link></Button>
+        </Card>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -270,10 +322,11 @@ export function CheckoutPage() {
                 </div>
 
                 {/* 2 Tabs chuyển đổi trực quan */}
-                <div className="grid grid-cols-2 gap-3 p-1 bg-stone-100/80 rounded-2xl border border-stone-200/60">
+                <div className={`grid ${tableSession ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'} gap-3 p-1 bg-stone-100/80 rounded-2xl border border-stone-200/60`}>
                   <button
                     type="button"
-                    onClick={() => setValue('loaiDonHang', 'TAKEAWAY')}
+                    disabled={isSubmitting}
+                    onClick={() => { clearTable(); setValue('loaiDonHang', 'TAKEAWAY'); }}
                     className={`py-3 px-4 rounded-xl flex items-center justify-center gap-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                       selectedLoaiDonHang === 'TAKEAWAY'
                         ? 'bg-white text-stone-900 shadow-sm border border-stone-200/70'
@@ -290,7 +343,8 @@ export function CheckoutPage() {
 
                   <button
                     type="button"
-                    onClick={() => setValue('loaiDonHang', 'DELIVERY')}
+                    disabled={isSubmitting}
+                    onClick={() => { clearTable(); setValue('loaiDonHang', 'DELIVERY'); }}
                     className={`py-3 px-4 rounded-xl flex items-center justify-center gap-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                       selectedLoaiDonHang === 'DELIVERY'
                         ? 'bg-white text-stone-900 shadow-sm border border-stone-200/70'
@@ -304,6 +358,12 @@ export function CheckoutPage() {
                     />
                     <span>Giao hàng tận nơi</span>
                   </button>
+                  {tableSession && (
+                    <button type="button" disabled={isSubmitting} onClick={() => setValue('loaiDonHang', 'AT_TABLE')}
+                      className="py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs sm:text-sm font-bold bg-primary text-primary-foreground">
+                      <QrCode className="h-4 w-4 shrink-0" /> Phục vụ tại bàn
+                    </button>
+                  )}
                 </div>
 
                 {/* Chi tiết theo từng hình thức */}
@@ -357,6 +417,14 @@ export function CheckoutPage() {
                       </div>
                     </div>
                   </div>
+                ) : selectedLoaiDonHang === 'AT_TABLE' ? (
+                  <div className="space-y-2 pt-1" role="status">
+                    <p className="text-xs font-semibold text-stone-700">Bàn đã xác nhận qua mã QR</p>
+                    <Badge variant="outline" className="max-w-full whitespace-normal break-words text-sm border-primary text-primary">
+                      {tableSession?.tableName || (isSubmitting ? 'Đang hoàn tất đơn tại bàn...' : 'Vui lòng quét lại mã QR tại bàn')}
+                    </Badge>
+                    <p className="text-xs text-stone-500">Không tính phí giao hàng. Để đổi bàn, vui lòng quét mã QR tại bàn mới.</p>
+                  </div>
                 ) : (
                   <div className="space-y-4 pt-1 animate-fade-in">
                     {/* Địa chỉ giao hàng chi tiết */}
@@ -388,12 +456,12 @@ export function CheckoutPage() {
                 )}
 
                 {/* Banner gợi ý gọi món tại bàn */}
-                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-900">
+                {selectedLoaiDonHang !== 'AT_TABLE' && <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-start gap-2.5 text-xs text-amber-900">
                   <QrCode className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
                   <p className="text-[11px] leading-relaxed">
                     <strong>Bạn đang ngồi tại quán?</strong> Hãy dùng camera điện thoại quét mã QR dán trên bàn để gọi món tại chỗ nhanh chóng mà không cần qua bước đặt hàng này!
                   </p>
-                </div>
+                </div>}
               </Card>
 
               {/* 2. Thông tin liên hệ nhận hàng */}
@@ -485,11 +553,15 @@ export function CheckoutPage() {
                     {
                       id: 'COD',
                       label:
-                        selectedLoaiDonHang === 'TAKEAWAY'
+                        selectedLoaiDonHang === 'AT_TABLE'
+                          ? 'Thanh toán tiền mặt tại quầy'
+                          : selectedLoaiDonHang === 'TAKEAWAY'
                           ? 'Thanh toán tiền mặt tại quầy khi đến nhận món'
                           : 'Thanh toán khi nhận hàng (COD)',
                       desc:
-                        selectedLoaiDonHang === 'TAKEAWAY'
+                        selectedLoaiDonHang === 'AT_TABLE'
+                          ? 'Trả tiền mặt cho nhân viên tại quầy'
+                          : selectedLoaiDonHang === 'TAKEAWAY'
                           ? 'Trả tiền mặt trực tiếp cho thu ngân tại chi nhánh'
                           : 'Trả tiền mặt cho tài xế giao hàng',
                       icon: '💵',
@@ -560,7 +632,7 @@ export function CheckoutPage() {
                   <div className="flex justify-between text-stone-600">
                     <span>Hình thức</span>
                     <span className="font-semibold text-stone-900">
-                      {selectedLoaiDonHang === 'TAKEAWAY' ? 'Đến lấy mang về' : 'Giao tận nơi'}
+                      {selectedLoaiDonHang === 'AT_TABLE' ? 'Phục vụ tại bàn' : selectedLoaiDonHang === 'TAKEAWAY' ? 'Đến lấy mang về' : 'Giao tận nơi'}
                     </span>
                   </div>
 
