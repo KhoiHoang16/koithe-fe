@@ -81,7 +81,8 @@ export function AdminLayout() {
   };
 
   const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.adminOnly || user?.vaiTro === 'ADMIN',
+    (item) => (!item.adminOnly || user?.vaiTro === 'ADMIN') &&
+      (user?.vaiTro !== 'CASHIER' || item.to === '/admin/customers'),
   );
 
   return (

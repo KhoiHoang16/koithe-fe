@@ -1,10 +1,5 @@
-import { PlaceholderPage } from '@/pages/placeholder-page';
+import { CustomerManagement } from '@/features/customer/components/customer-management';
 
 export function CustomersPage() {
-  return (
-    <PlaceholderPage
-      title="Quản lý khách hàng"
-      description="Danh sách khách hàng, điểm tích lũy, hạng thành viên và lịch sử mua hàng."
-    />
-  );
+  return <CustomerManagement />;
 }
