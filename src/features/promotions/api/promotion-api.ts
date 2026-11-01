@@ -136,7 +136,7 @@ export const promotionManagementApi = {
     const program = await promotionManagementApi.program(current.maChuongTrinh);
     if (programStatus(program) === 'Đang diễn ra')
       throw new Error(
-        'Chưa thể sửa voucher đang diễn ra vì BE chưa bảo vệ số lượt sử dụng khi cập nhật.',
+        'chưa thể sửa voucher đang diễn ra',
       );
     if (validated.gioiHanSuDung !== null && validated.gioiHanSuDung < current.soLuotDaDung)
       throw new Error('Số lượng phát hành không được nhỏ hơn số lượt đã dùng.');
