@@ -15,7 +15,7 @@ export interface CartItem {
   productImage?: string;
   variantId: number;
   variantName: string; // e.g., "Size M"
-  price: number; // Base price + variant price increment
+  price: number; // API unit price including selected toppings
   sugarLevel: string; // "0%", "30%", "50%", "70%", "100%"
   iceLevel: string; // "0%", "30%", "50%", "70%", "100%"
   toppings: SelectedTopping[];

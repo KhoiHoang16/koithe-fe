@@ -115,10 +115,7 @@ export const useCartStore = create<CartState>()(
       getItemCount: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
 
       getSubtotal: () =>
-        get().items.reduce((acc, item) => {
-          const toppingTotal = item.toppings.reduce((sum, topping) => sum + topping.giaBan, 0);
-          return acc + (item.price + toppingTotal) * item.quantity;
-        }, 0),
+        get().items.reduce((acc, item) => acc + item.price * item.quantity, 0),
 
       getTotal: (shippingFee = 0) => {
         const subtotal = get().getSubtotal();

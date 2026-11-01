@@ -19,7 +19,7 @@ export interface CartItemDto {
   iceLevel?: string;
   note?: string;
   toppings: CartTopping[];
-  unitPrice: number;
+  unitPrice: number; // Includes toppings; do not add their prices again when rendering totals.
   lineTotal: number;
 }
 

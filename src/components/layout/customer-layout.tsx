@@ -176,6 +176,7 @@ export function CustomerLayout() {
                     : 'text-stone-800 hover:bg-stone-100/90'
                 }`}
                 title="Trang cá nhân của bạn"
+                aria-label={`Trang cá nhân của ${user.hoTen}`}
               >
                 <Avatar className="h-8 w-8 ring-1 ring-border group-hover:ring-primary/50 transition-all shrink-0">
                   <AvatarImage src={user.anhDaiDien} alt={user.hoTen} />
@@ -183,7 +184,7 @@ export function CustomerLayout() {
                     {getInitials(user.hoTen)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs sm:text-sm font-semibold tracking-tight truncate max-w-[120px] sm:max-w-[170px] group-hover:text-primary transition-colors">
+                <span className="hidden sm:inline text-sm font-semibold tracking-tight truncate max-w-[170px] group-hover:text-primary transition-colors">
                   {user.hoTen}
                 </span>
               </Link>

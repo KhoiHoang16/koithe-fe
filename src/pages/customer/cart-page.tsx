@@ -191,8 +191,7 @@ export function CartPage() {
             {/* List of Cart Items */}
             <div className="space-y-3">
               {items.map((item) => {
-                const toppingSum = item.toppings.reduce((sum, t) => sum + t.giaBan, 0);
-                const itemUnitPrice = item.price + toppingSum;
+                const itemUnitPrice = item.price;
                 const itemTotal = itemUnitPrice * item.quantity;
 
                 return (
