@@ -35,4 +35,10 @@ export const paymentApi = {
     api.post<PaymentResponse>('/payments/dev-simulate-success', null, {
       params: { orderId, method },
     }),
+  confirmCash: (paymentId: number) =>
+    api.post<PaymentResponse>(`/payments/${paymentId}/confirm-cash`),
+  confirmCashByOrder: (orderId: number) =>
+    api.post<PaymentResponse>('/payments/confirm-cash', null, {
+      params: { orderId },
+    }),
 };

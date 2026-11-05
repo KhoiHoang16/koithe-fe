@@ -37,7 +37,7 @@ export function TablesPage() {
   if (isLoading) return <LoadingScreen message="Đang tải sơ đồ bàn..." />;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản lý Bàn & Mã QR Gọi món tại bàn</h1>

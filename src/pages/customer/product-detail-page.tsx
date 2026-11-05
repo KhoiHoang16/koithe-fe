@@ -54,11 +54,11 @@ function getVariantVolume(name: string) {
 }
 
 export function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { productId: paramProductId, id } = useParams<{ productId?: string; id?: string }>();
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
 
-  const productId = Number(id) || 1;
+  const productId = Number(paramProductId ?? id) || 1;
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productId],

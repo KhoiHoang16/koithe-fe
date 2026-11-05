@@ -1,40 +1,75 @@
-# Các lỗi / vướng mắc FE đang chờ BE
+# Trạng thái các điểm vướng mắc BE / FE
 
-Chỉ giữ các điểm đã ghi nhận khiến luồng FE không chạy được, bị chặn hoặc hiển thị sai nghiệp vụ. Đã bỏ khác biệt tên trường, cấu trúc response mà FE đã xử lý và các đề xuất mở rộng. Đây là ghi nhận từ những lần kiểm thử trước, chưa xác nhận lại sau thay đổi BE.
+> **Cập nhật:** Các mục 1–5 đã được xử lý trên nhánh `fix/be-pending-notes` của `koithe-api` và FE (`koithe-fe`) đã gỡ các điểm chặn tạm tương ứng. Mục 6 là lỗi FE tồn đọng cần xử lý riêng.
 
-## 1. Thanh toán online chưa hoàn tất được luồng thật — TASK-03
+---
 
-- VNPay từng trả lỗi sandbox `code=72` (“Không tìm thấy website”). Cần BE kiểm tra cấu hình merchant sandbox.
-- URL thanh toán BE từng trả callback `http://localhost:8088/api/payments/vnpay-return`, trong khi BE chạy cổng 8081. Callback hiện trả JSON, chưa thống nhất cách đưa khách trở về trang kết quả FE.
-- **Ảnh hưởng FE:** khách có thể dừng ở lỗi cổng thanh toán, callback sai địa chỉ hoặc không trở lại được trang kết quả. Chưa nghiệm thu thanh toán VNPay thật.
-- **Cần BE:** kiểm tra merchant, URL callback và luồng trả kết quả về FE.
+## 1. Thanh toán online — TASK-03 [ĐÃ XỬ LÝ TRÊN BE]
 
-## 2. Tạo lại khách đã xóa bị lỗi 500 — TASK-04
+- **Trạng thái:** Đã sửa trên nhánh `fix/be-pending-notes`.
+- **Chi tiết xử lý:**
+  - `vnpay.return-url` và `momo.return-url` được cấu hình chuẩn về cổng BE 8081 (`http://localhost:8081/api/payments/vnpay-return`).
+  - Thêm cấu hình frontend URL `app.frontend-url` (mặc định `http://localhost:5173`).
+  - Sau khi xử lý callback từ VNPay/MoMo, BE thực hiện redirect 302 về trang kết quả FE:
+    - Thành công: `${app.frontend-url}/order-success/${orderId}`
+    - Thất bại / hủy: `${app.frontend-url}/checkout/payment/callback?orderId=${orderId}&paymentId=${paymentId}&status=${status}`.
 
-- Khách bị xóa mềm vẫn giữ SĐT trong DB. Khi tạo khách mới với SĐT đó, API trả HTTP 500 “Lỗi hệ thống”; tạo bằng SĐT mới thì thành công.
-- **Ảnh hưởng FE:** không thêm được khách với SĐT đã xóa và không nhận được lỗi nghiệp vụ rõ ràng để hướng dẫn người dùng.
-- **Cần BE:** xử lý trùng SĐT với bản ghi xóa mềm; cho khôi phục/tạo lại hoặc trả lỗi nghiệp vụ phù hợp theo quy tắc thống nhất.
+---
 
-## 3. Ca hiện tại và tiền mặt đối soát không chính xác — TASK-06
+## 2. Tạo lại khách đã xóa bị lỗi 500 — TASK-04 [ĐÃ XỬ LÝ TRÊN BE]
 
-- `/shifts/current` có thể trả ca đang mở của người khác khi tài khoản không có ca; response thiếu chủ ca.
-- **Ảnh hưởng FE:** có thể hiện nhầm ca hiện tại. FE phải hạn chế CASHIER đóng ca sau khi tải lại trang vì không xác minh được quyền sở hữu ca.
-- **Cần BE:** trả đúng ca của tài khoản, bổ sung chủ ca và kiểm tra quyền đóng ca.
-- Tiền mặt dự kiến hiện lấy tiền đầu ca cộng tổng tiền mọi đơn trong ca, chưa tách phương thức tiền mặt hoặc loại đơn hủy/chưa thanh toán.
-- **Ảnh hưởng FE:** số tiền cần đối soát và chênh lệch có thể sai khi có đơn online, hủy hoặc chưa thu tiền.
-- **Cần BE:** tính tiền mặt dự kiến từ giao dịch tiền mặt hợp lệ.
+- **Trạng thái:** Đã sửa trên nhánh `fix/be-pending-notes`.
+- **Chi tiết xử lý:**
+  - Trong `KhachHangServiceImpl.createCustomer`: kiểm tra trùng số điện thoại.
+  - Nếu trùng với khách đang hoạt động (`deletedAt == null`): ném `BusinessException(HttpStatus.CONFLICT, "Số điện thoại đã tồn tại")` (HTTP 409 thay vì 500).
+  - Nếu trùng với bản ghi đã xóa mềm (`deletedAt != null`): tự động khôi phục (`customer.restore()`), cập nhật thông tin mới (họ tên, email, hạng, điểm...) và lưu lại.
+  - Bổ sung `DataIntegrityViolationException` handler trả về HTTP 409 CONFLICT trong `GlobalExceptionHandler` để phòng ngừa lỗi unique constraint.
 
-## 4. Chưa sửa được voucher đang diễn ra — TASK-08
+---
 
-- PUT voucher hiện có thể cập nhật cả `soLuotDaDung`, dẫn tới ghi đè số lượt dùng mới phát sinh trên POS.
-- **Ảnh hưởng FE:** FE đang chặn sửa voucher thuộc chương trình đang diễn ra để tránh làm sai lượt dùng; thao tác sửa ở trường hợp này chưa dùng được.
-- **Cần BE:** không cập nhật lượt dùng qua API sửa thông tin voucher và bảo vệ lượt dùng khi có cập nhật đồng thời.
+## 3. Ca hiện tại và tiền mặt đối soát — TASK-06 [ĐÃ XỬ LÝ TRÊN BE & FE]
 
-## 5. Đơn tiền mặt chưa thu tiền đã hiện “Đã thanh toán” — TASK-09
+- **Trạng thái:** Đã sửa trên nhánh `fix/be-pending-notes` và cập nhật FE.
+- **Chi tiết xử lý:**
+  - **BE:**
+    - `CaLamViecResponse` bổ sung `maThuNgan` và `tenThuNgan`.
+    - `GET /shifts/current`: chỉ trả ca đang mở của chính thu ngân đăng nhập (`findCurrentActive(principal.id)`), không fallback sang ca của thu ngân khác; nếu không có ca thì trả `null`.
+    - `POST /shifts/{id}/close`: kiểm tra quyền đóng ca — chỉ cho phép chính chủ ca (`thuNgan.id == principal.id`) hoặc tài khoản có role `ADMIN`/`MANAGER`. Người khác cố đóng ca sẽ bị trả HTTP 403 FORBIDDEN.
+    - `tienMatDuKien`: tính chính xác bằng `tienDauCa + sumTienMatThanhCongByCaId` (chỉ cộng các giao dịch có `phuong_thuc_thanh_toan = 'TIEN_MAT'` và `trang_thai = 'THANH_CONG'`), loại bỏ đơn hủy.
+  - **FE:**
+    - Gỡ bỏ hạn chế tạm thời chỉ cho đóng ca khi vừa mở trong cùng phiên; cập nhật `canCloseShift` cho phép đóng ca khi `shift.maThuNgan === userId` hoặc tài khoản là ADMIN/MANAGER.
+    - Ẩn cảnh báo "Chưa xác định được ca này thuộc tài khoản của bạn" khi ca thuộc về user hiện tại.
+    - Cập nhật ghi chú đối soát tiền mặt hiển thị chính xác theo dữ liệu đã lọc giao dịch tiền mặt từ BE.
 
-- Hai đơn thử `DH-2026-014` và `DH-2026-015`, mỗi đơn 43.000đ, gọi `/payments/guest-cash` đã chuyển ngay sang `DA_THANH_TOAN`, dù thử nghiệm chưa thu tiền thật.
-- **Ảnh hưởng FE:** trang tra cứu hiển thị “Đã thanh toán” trước khi khách trả tiền; số liệu liên quan có thể ghi nhận sớm.
-- **Cần BE:** phân biệt đăng ký trả tiền mặt với xác nhận đã thu tiền cho đơn website/QR.
+---
+
+## 4. Voucher đang diễn ra & cập nhật số lượt dùng — TASK-08 [ĐÃ XỬ LÝ TRÊN BE & FE]
+
+- **Trạng thái:** Đã sửa trên nhánh `fix/be-pending-notes` và cập nhật FE.
+- **Chi tiết xử lý:**
+  - **BE:**
+    - `KhuyenMaiVoucherMapper` bỏ qua `soLuotDaDung` khi ánh xạ từ request update entity (`@Mapping(target = "soLuotDaDung", ignore = true)`).
+    - `KhuyenMaiVoucherServiceImpl.update`: giữ nguyên `entity.getSoLuotDaDung()` từ DB, không ghi đè giá trị gửi lên từ client.
+    - Phương thức tăng lượt dùng `tangSoLuotDaDungAtomic` sử dụng câu lệnh UPDATE trực tiếp trong DB (`so_luot_da_dung = so_luot_da_dung + 1`) để đảm bảo tính nguyên tử (atomic) khi có giao dịch đồng thời.
+  - **FE:**
+    - Gỡ bỏ đoạn chặn tạm trong `promotion-api.ts` (trước đây ném lỗi `'chưa thể sửa voucher đang diễn ra'`). Giờ đây người quản trị có thể cập nhật thông tin voucher đang diễn ra mà không lo mất hoặc đè số lượt dùng.
+
+---
+
+## 5. Đơn tiền mặt khách vãng lai và xác nhận thu tiền — TASK-09 [ĐÃ XỬ LÝ TRÊN BE & FE]
+
+- **Trạng thái:** Đã sửa trên nhánh `fix/be-pending-notes` và cập nhật FE.
+- **Chi tiết xử lý:**
+  - **BE:**
+    - `POST /api/payments/guest-cash`: chỉ tạo giao dịch thanh toán trạng thái `CHO_XU_LY` (chờ thu tiền), KHÔNG tự động chuyển trạng thái đơn hàng sang `DA_THANH_TOAN`.
+    - Bổ sung endpoint cho thu ngân xác nhận đã thu tiền mặt:
+      - `POST /api/payments/{id}/confirm-cash`: xác nhận theo ID giao dịch.
+      - `POST /api/payments/confirm-cash?orderId={orderId}`: xác nhận giao dịch tiền mặt của đơn hàng.
+    - Khi thu ngân gọi xác nhận thu tiền: giao dịch chuyển sang `THANH_CONG`, ghi nhận thu ngân / ca làm việc hiện tại, và đơn hàng chuyển sang `DA_THANH_TOAN`.
+  - **FE:**
+    - Bổ sung `confirmCash(paymentId)` và `confirmCashByOrder(orderId)` vào `payment-api.ts`.
+
+---
 
 ## 6. Thêm nhanh món gợi ý vào giỏ bị lỗi 404 — TASK-09 (lỗi FE cần xử lý)
 
@@ -43,4 +78,4 @@ Chỉ giữ các điểm đã ghi nhận khiến luồng FE không chạy đư�
 - **Đối chiếu code FE:** `handleQuickAdd` trong `cart-page.tsx` dùng ID biến thể cố định `101` khi sản phẩm gợi ý chưa có danh sách biến thể. Danh sách sản phẩm hiện được adapter trả với `bienTheList` rỗng. Đây là nguyên nhân phía FE cần xử lý trước; ảnh chưa có payload để xác nhận ID thực tế của request lỗi, không quy lỗi cho BE.
 - **Hướng xử lý FE:** lấy biến thể thật của sản phẩm trước khi thêm nhanh hoặc đưa người dùng đến trang chọn món; không gửi ID dự phòng tự đặt. Chỉ ghi nhận, chưa sửa code.
 
-Chỉ ghi note; không sửa BE/DB hoặc dữ liệu POS. Mục 6 là lỗi FE, được giữ trong file này theo yêu cầu người dùng, không phải yêu cầu BE sửa.
+*Lưu ý: Mục 6 là lỗi FE, được giữ trong file này theo yêu cầu người dùng, không phải yêu cầu BE sửa.*

@@ -51,6 +51,7 @@ function mapTopping(topping: BackendTopping): Topping {
     id: topping.id,
     tenTopping: topping.tenTopping,
     giaBan: Number(topping.giaBan),
+    soLuongTon: Number(topping.soLuongTon ?? 0),
     coSan: topping.conHang,
     trangThai: true,
   };
@@ -61,6 +62,7 @@ function mapVariant(variant: BackendVariant): ProductVariant {
     id: variant.id,
     tenBienThe: variant.kichCo,
     giaBan: Number(variant.giaBan),
+    soLuongTon: Number(variant.soLuongTon ?? 0),
     coSan: variant.conHang,
   };
 }
@@ -144,14 +146,30 @@ export const catalogApi = {
     return mapCategory(category);
   },
 
+  updateCategory: async (id: number, data: Partial<Category>): Promise<Category> => {
+    const category = (await httpClient.put(`/categories/${id}`, { tenDanhMuc: data.tenDanhMuc })) as unknown as BackendCategory;
+    return mapCategory(category);
+  },
+
   deleteCategory: (id: number): Promise<void> => httpClient.delete(`/categories/${id}`) as unknown as Promise<void>,
 
   createTopping: async (data: Partial<Topping>): Promise<Topping> => {
     const topping = (await httpClient.post('/toppings', {
       tenTopping: data.tenTopping,
       giaBan: data.giaBan,
-      soLuongTon: 0,
+      soLuongTon: data.soLuongTon ?? 100,
     })) as unknown as BackendTopping;
     return mapTopping(topping);
   },
+
+  updateTopping: async (id: number, data: Partial<Topping>): Promise<Topping> => {
+    const topping = (await httpClient.put(`/toppings/${id}`, {
+      tenTopping: data.tenTopping,
+      giaBan: data.giaBan,
+      soLuongTon: data.soLuongTon ?? 100,
+    })) as unknown as BackendTopping;
+    return mapTopping(topping);
+  },
+
+  deleteTopping: (id: number): Promise<void> => httpClient.delete(`/toppings/${id}`) as unknown as Promise<void>,
 };

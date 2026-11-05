@@ -16,6 +16,7 @@ export interface Topping {
   id: number;
   tenTopping: string;
   giaBan: number;
+  soLuongTon?: number;
   coSan: boolean;
   trangThai: boolean;
 }
@@ -25,6 +26,7 @@ export interface ProductVariant {
   tenBienThe: string; // e.g. "Size S", "Size M", "Size L"
   giaGoc?: number;
   giaBan: number;
+  soLuongTon?: number;
   coSan: boolean;
 }
 

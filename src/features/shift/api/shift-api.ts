@@ -11,6 +11,8 @@ export interface Shift {
   soDonHang: number | null;
   tienMatDuKien: number | null;
   chenhLech: number | null;
+  maThuNgan?: number | null;
+  tenThuNgan?: string | null;
 }
 export const shiftApi = {
   list: (status?: string) =>

@@ -161,7 +161,7 @@ export const router = createBrowserRouter([
       {
         path: 'employees',
         element: (
-          <ProtectedRoute allowedRoles={['ADMIN']}>
+          <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
             {withSuspense(<LazyPages.AdminEmployeesPage />)}
           </ProtectedRoute>
         ),

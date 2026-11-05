@@ -49,6 +49,7 @@ export function CartPage() {
   const [voucherCode, setVoucherCode] = useState('');
   const [isValidatingVoucher, setIsValidatingVoucher] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [quickAddingId, setQuickAddingId] = useState<number | null>(null);
 
   const subtotal = getSubtotal();
   const shippingFee = subtotal > 0 ? 15000 : 0;
@@ -106,12 +107,24 @@ export function CartPage() {
     e.preventDefault();
     e.stopPropagation();
 
-    const defaultVariant =
-      product.bienTheList && product.bienTheList.length > 0
-        ? product.bienTheList[0]
-        : { id: 101, tenBienThe: 'Size M', giaBan: product.giaTu || 45000 };
+    if (quickAddingId !== null) return;
+    setQuickAddingId(product.id);
 
     try {
+      // Danh sách sản phẩm không kèm biến thể → lấy biến thể thật từ API, không dùng ID tự đặt
+      let variants = product.bienTheList ?? [];
+      if (variants.length === 0) {
+        const detail = await catalogApi.getProductById(product.id);
+        variants = detail?.bienTheList ?? [];
+      }
+      const defaultVariant = variants.find((variant) => variant.coSan !== false);
+
+      if (!defaultVariant) {
+        toast.info(`Vui lòng chọn tuỳ chọn cho ${product.tenSanPham}`);
+        navigate(`/menu/${product.id}`);
+        return;
+      }
+
       await addItem({
         productId: product.id,
         productName: product.tenSanPham,
@@ -128,6 +141,8 @@ export function CartPage() {
       toast.success(`Đã thêm 1x ${product.tenSanPham} vào giỏ hàng!`);
     } catch {
       toast.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại.');
+    } finally {
+      setQuickAddingId(null);
     }
   };
 
@@ -365,7 +380,8 @@ export function CartPage() {
                         <button
                           type="button"
                           onClick={(e) => handleQuickAdd(prod, e)}
-                          className="h-7 w-7 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-xs shrink-0"
+                          disabled={quickAddingId !== null}
+                          className="h-7 w-7 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-transform active:scale-90 cursor-pointer shadow-xs shrink-0 disabled:opacity-60 disabled:cursor-wait"
                           title="Thêm nhanh vào giỏ"
                         >
                           <Plus className="h-3.5 w-3.5 stroke-[2.5]" />

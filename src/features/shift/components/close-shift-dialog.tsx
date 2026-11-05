@@ -32,7 +32,9 @@ export function CloseShiftDialog({
     retry: false,
   });
   const shift = query.data;
-  const allowed = !!shift && canCloseShift(role, shift.trangThai, id, openedByMeId);
+  const allowed =
+    !!shift &&
+    canCloseShift(role, shift.trangThai, shift.maThuNgan ?? id, userId ?? openedByMeId);
   let actual: number | null = null;
   try {
     actual = parseCash(amount);
@@ -44,7 +46,7 @@ export function CloseShiftDialog({
     mutationFn: async (value: number) => {
       if (!allowed) throw new Error('Ca không đủ điều kiện đóng. Vui lòng tải lại.');
       const fresh = await shiftApi.detail(id);
-      if (!canCloseShift(role, fresh.trangThai, fresh.id, openedByMeId))
+      if (!canCloseShift(role, fresh.trangThai, fresh.maThuNgan ?? fresh.id, userId ?? openedByMeId))
         throw new Error('Ca đã đóng hoặc không đủ điều kiện đóng.');
       if (
         fresh.tienMatDuKien !== shift?.tienMatDuKien ||
@@ -92,8 +94,7 @@ export function CloseShiftDialog({
           <div className="space-y-4">
             <ShiftSummary shift={shift} />
             <p className="rounded-md bg-muted p-3 text-sm">
-              Tiền mặt dự kiến hiện do BE tính từ tiền đầu ca và tổng doanh thu, chưa tách phương
-              thức thanh toán. Kết quả chỉ là đối chiếu theo số liệu hệ thống hiện có.
+              Tiền mặt dự kiến do BE tính từ tiền đầu ca và các giao dịch tiền mặt đã thanh toán trong ca.
             </p>
             {!allowed && <p role="alert">Ca đã đóng hoặc chưa xác định được quyền đóng ca này.</p>}
             <form onSubmit={submit} className="space-y-4" noValidate>

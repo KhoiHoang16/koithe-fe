@@ -1,7 +1,6 @@
 import { httpClient, api } from '@/shared/api/http-client';
 import {
   validateVoucher,
-  programStatus,
   sameProgram,
   type ManagedVoucher,
   type PromotionProgram,
@@ -133,11 +132,6 @@ export const promotionManagementApi = {
   updateVoucher: async (id: number, input: VoucherInput) => {
     const validated = validateVoucher(input);
     const current = await api.get<ManagedVoucher>(`/vouchers/${id}`);
-    const program = await promotionManagementApi.program(current.maChuongTrinh);
-    if (programStatus(program) === 'Đang diễn ra')
-      throw new Error(
-        'chưa thể sửa voucher đang diễn ra',
-      );
     if (validated.gioiHanSuDung !== null && validated.gioiHanSuDung < current.soLuotDaDung)
       throw new Error('Số lượng phát hành không được nhỏ hơn số lượt đã dùng.');
     return api.put<ManagedVoucher>(`/vouchers/${id}`, {

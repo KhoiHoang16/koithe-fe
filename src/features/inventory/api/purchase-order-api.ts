@@ -39,13 +39,26 @@ export interface PurchaseFilters {
 export interface StockVariant {
   id: number;
   kichCo: string;
+  giaBan?: number;
   soLuongTon: number;
   conHang: boolean;
 }
 export interface InventoryProduct {
   id: number;
   tenSanPham: string;
+  tenDanhMuc?: string;
+  maDanhMuc?: number;
+  hinhAnh?: string;
 }
+export interface ProductStockSummary {
+  id: number;
+  tenSanPham: string;
+  tenDanhMuc: string;
+  hinhAnh?: string;
+  variants: StockVariant[];
+  totalStock: number;
+}
+
 export const purchaseOrderApi = {
   list: (params: PurchaseFilters) =>
     api.get<InventoryPage<PurchaseOrder>>('/purchase-orders', { params: { ...params, size: 20 } }),
@@ -61,4 +74,31 @@ export const purchaseOrderApi = {
   products: (keyword: string, page: number) =>
     api.get<InventoryPage<InventoryProduct>>('/products', { params: { keyword, page, size: 20 } }),
   variants: (id: number) => api.get<StockVariant[]>(`/products/${id}/variants`),
+  updateVariantStock: (variantId: number, soLuongTon: number) =>
+    api.patch<StockVariant>(`/variants/${variantId}/stock`, { soLuongTon }),
+  allProductsWithStock: async (): Promise<ProductStockSummary[]> => {
+    const pageData = await api.get<InventoryPage<InventoryProduct>>('/products', {
+      params: { page: 0, size: 100 },
+    });
+    const products = pageData.content ?? [];
+    const results = await Promise.all(
+      products.map(async (p) => {
+        const variants = await api.get<StockVariant[]>(`/products/${p.id}/variants`);
+        const normalized = (variants ?? []).map((v) => ({
+          ...v,
+          soLuongTon: Number(v.soLuongTon ?? 0),
+        }));
+        const totalStock = normalized.reduce((sum, v) => sum + v.soLuongTon, 0);
+        return {
+          id: p.id,
+          tenSanPham: p.tenSanPham,
+          tenDanhMuc: p.tenDanhMuc || 'Đồ uống',
+          hinhAnh: p.hinhAnh,
+          variants: normalized,
+          totalStock,
+        };
+      }),
+    );
+    return results;
+  },
 };

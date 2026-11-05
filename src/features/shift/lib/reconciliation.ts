@@ -16,13 +16,19 @@ export function shiftPermissions(role: string | undefined) {
   const manage = role === 'ADMIN' || role === 'MANAGER';
   return { manage, operate: manage || role === 'CASHIER' };
 }
-// /current có thể trả ca người khác; chỉ response mở ca trong phiên chứng minh chủ ca.
+// Chỉ chủ ca hoặc người có quyền quản lý (ADMIN, MANAGER) mới được đóng ca.
 export function canCloseShift(
   role: string | undefined,
   status: string,
-  id: number,
-  openedByMeId: number | null,
+  shiftOwnerOrId?: number | null,
+  currentUserIdOrOpenedByMeId?: number | null,
 ) {
   const permissions = shiftPermissions(role);
-  return status === 'DANG_MO' && permissions.operate && (permissions.manage || openedByMeId === id);
+  if (status !== 'DANG_MO' || !permissions.operate) return false;
+  if (permissions.manage) return true;
+  return (
+    shiftOwnerOrId != null &&
+    currentUserIdOrOpenedByMeId != null &&
+    shiftOwnerOrId === currentUserIdOrOpenedByMeId
+  );
 }

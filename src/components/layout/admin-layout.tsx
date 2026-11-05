@@ -47,7 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/promotions', icon: Tag, label: 'Khuyến mãi' },
   { to: '/admin/vouchers', icon: Ticket, label: 'Voucher' },
   { to: '/admin/customers', icon: Users, label: 'Khách hàng' },
-  { to: '/admin/employees', icon: Users, label: 'Nhân viên', adminOnly: true },
+  { to: '/admin/employees', icon: Users, label: 'Nhân viên' },
   { to: '/admin/shifts', icon: Calendar, label: 'Ca làm việc' },
   { to: '/admin/tables', icon: Table2, label: 'Bàn' },
   { to: '/admin/inventory', icon: Warehouse, label: 'Kho' },
@@ -81,31 +81,35 @@ export function AdminLayout() {
   };
 
   const visibleItems = NAV_ITEMS.filter(
-    (item) => (!item.adminOnly || user?.vaiTro === 'ADMIN') &&
+    (item) =>
+      (!item.adminOnly || user?.vaiTro === 'ADMIN') &&
       (user?.vaiTro !== 'CASHIER' || ['/admin/customers', '/admin/shifts'].includes(item.to)),
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden" data-lenis-prevent>
       {/* ============================================================
           SIDEBAR
           ============================================================ */}
       <aside
         className={cn(
-          'flex flex-col border-r bg-card transition-all duration-300 shrink-0',
+          'relative flex flex-col h-full border-r bg-card transition-all duration-300 shrink-0',
           collapsed ? 'w-16' : 'w-64',
         )}
       >
         {/* Logo */}
-        <div className={cn('flex items-center h-16 px-4 border-b gap-3', collapsed && 'justify-center px-0')}>
-          <span className="text-2xl">🧋</span>
-          {!collapsed && (
-            <span className="font-bold text-lg text-primary">MilkTea Admin</span>
+        <div
+          className={cn(
+            'flex items-center h-16 px-4 border-b gap-3 shrink-0',
+            collapsed && 'justify-center px-0',
           )}
+        >
+          <span className="text-2xl">🧋</span>
+          {!collapsed && <span className="font-bold text-lg text-primary">MilkTea Admin</span>}
         </div>
 
         {/* Navigation */}
-        <ScrollArea className="flex-1 py-4">
+        <ScrollArea className="flex-1 min-h-0 py-3">
           <nav className="space-y-1 px-2">
             {visibleItems.map((item) => {
               const active = isActive(item.to);
@@ -114,7 +118,7 @@ export function AdminLayout() {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                     active
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -141,7 +145,7 @@ export function AdminLayout() {
         </ScrollArea>
 
         {/* User info + logout */}
-        <div className="border-t p-3">
+        <div className="border-t p-3 shrink-0">
           {user && (
             <div className={cn('flex items-center gap-3 mb-3', collapsed && 'justify-center')}>
               <Avatar className="h-8 w-8 shrink-0">
@@ -176,7 +180,7 @@ export function AdminLayout() {
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-1/2 -translate-y-1/2 -right-3 z-10 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
+          className="absolute top-1/2 -translate-y-1/2 -right-3 z-20 flex h-6 w-6 items-center justify-center rounded-full border bg-background shadow-sm hover:bg-accent transition-colors"
           aria-label={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
         >
           {collapsed ? (
@@ -190,7 +194,7 @@ export function AdminLayout() {
       {/* ============================================================
           MAIN CONTENT AREA
           ============================================================ */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
         {/* Top bar */}
         <header className="flex h-16 items-center justify-between border-b px-6 bg-background shrink-0">
           <div>
@@ -210,7 +214,11 @@ export function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main ref={mainRef} className="flex-1 overflow-auto p-6">
+        <main
+          ref={mainRef}
+          data-lenis-prevent
+          className="flex-1 min-h-0 overflow-y-auto p-6"
+        >
           <Outlet />
         </main>
       </div>

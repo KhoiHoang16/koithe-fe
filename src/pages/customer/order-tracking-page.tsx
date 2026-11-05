@@ -21,8 +21,8 @@ const STEPS: { status: OrderStatus; label: string; desc: string; icon: any }[] =
 ];
 
 export function OrderTrackingPage() {
-  const { id } = useParams<{ id: string }>();
-  const orderId = id || '1001';
+  const { orderId: paramOrderId, id } = useParams<{ orderId?: string; id?: string }>();
+  const orderId = paramOrderId || id || '1001';
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', 'tracking', orderId],
@@ -72,11 +72,10 @@ export function OrderTrackingPage() {
             return (
               <div key={step.status} className="relative flex items-start gap-4">
                 <div
-                  className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all ${
-                    isPassed
+                  className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-all ${isPassed
                       ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                       : 'bg-background text-muted-foreground border-input'
-                  } ${isCurrent ? 'ring-4 ring-primary/20 scale-110' : ''}`}
+                    } ${isCurrent ? 'ring-4 ring-primary/20 scale-110' : ''}`}
                 >
                   <Icon className="h-5 w-5" />
                 </div>
