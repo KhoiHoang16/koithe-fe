@@ -120,3 +120,4 @@ export function evaluateAdvancedFilter<T extends Record<string, any>>(
 
   return filter.globalNot ? !result : result;
 }
+

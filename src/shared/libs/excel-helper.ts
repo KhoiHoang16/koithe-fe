@@ -66,3 +66,4 @@ export function readExcelFile<T = any>(file: File): Promise<T[]> {
     reader.readAsBinaryString(file);
   });
 }
+

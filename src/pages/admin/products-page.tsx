@@ -80,9 +80,6 @@ export function ProductsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản lý sản phẩm</h1>
-          <p className="text-muted-foreground text-xs">
-            Chọn sản phẩm ở danh sách bên trái (DSSP) để xem chi tiết biến thể, giá bán & tồn kho (CTSP) ở sub-form bên phải
-          </p>
         </div>
         <Button asChild className="gap-2 font-bold text-xs bg-accent text-accent-foreground hover:bg-accent/90 rounded-xl">
           <Link to="/admin/products/new">

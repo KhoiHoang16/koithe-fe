@@ -87,9 +87,7 @@ export function ReportDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Báo cáo & Thống kê kinh doanh</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Tổng hợp doanh thu theo khoảng ngày, phân tích theo Tháng/Quý/Năm và Ma trận Sản phẩm
-          </p>
+
         </div>
 
         <div className="flex items-center gap-2">

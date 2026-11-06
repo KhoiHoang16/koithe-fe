@@ -99,9 +99,7 @@ export function CustomerManagement() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Quản lý khách hàng</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Chọn khách hàng ở bảng bên trái (DSKH) để xem chi tiết hồ sơ thành viên (CTKH) ở sub-form bên phải.
-          </p>
+
         </div>
         {permissions.create && (
           <Button
@@ -190,11 +188,10 @@ export function CustomerManagement() {
                         <tr
                           key={customer.id}
                           onClick={() => setSelectedId(customer.id)}
-                          className={`border-b last:border-0 cursor-pointer transition-colors ${
-                            isSelected
+                          className={`border-b last:border-0 cursor-pointer transition-colors ${isSelected
                               ? 'bg-primary/10 hover:bg-primary/15'
                               : 'hover:bg-muted/20'
-                          }`}
+                            }`}
                         >
                           <td className="p-3 font-semibold text-primary">
                             <div className="flex items-center gap-1.5">

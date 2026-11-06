@@ -97,9 +97,7 @@ export function InventoryManagement() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Phiếu nhập hàng & Tồn kho</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Theo dõi số lượng tồn kho toàn bộ biến thể sản phẩm, kiểm kê nhanh và quản lý phiếu nhập kho (DSPN & CTPN)
-          </p>
+
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setStock(!stock)}>
@@ -247,11 +245,10 @@ export function InventoryManagement() {
                               <tr
                                 key={order.id}
                                 onClick={() => setDetail(order.id)}
-                                className={`border-t cursor-pointer transition-colors ${
-                                  isSelected
+                                className={`border-t cursor-pointer transition-colors ${isSelected
                                     ? 'bg-primary/10 hover:bg-primary/15'
                                     : 'hover:bg-muted/20'
-                                }`}
+                                  }`}
                               >
                                 <td className="p-3 font-mono font-semibold text-primary">
                                   <div className="flex items-center gap-1.5">

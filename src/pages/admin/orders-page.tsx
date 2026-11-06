@@ -300,9 +300,7 @@ export function OrdersPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quản lý & Điều phối đơn hàng</h1>
-          <p className="text-muted-foreground text-xs">
-            Tìm kiếm nâng cao đa tiêu chí (AND/OR/NOT, &gt;, &lt;, =), xuất Excel và xem chi tiết theo mô hình DSHD – CTHD
-          </p>
+
         </div>
 
         <div className="flex items-center gap-2">
@@ -354,11 +352,10 @@ export function OrdersPage() {
               <button
                 key={tab.id}
                 onClick={() => setSelectedStatus(tab.id as OrderStatus | 'ALL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                  selectedStatus === tab.id
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${selectedStatus === tab.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -422,11 +419,10 @@ export function OrdersPage() {
                       <tr
                         key={o.id}
                         onClick={() => setSelectedOrderId(o.id)}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected
-                            ? 'bg-primary/10 hover:bg-primary/15'
-                            : 'hover:bg-muted/30'
-                        }`}
+                        className={`cursor-pointer transition-colors ${isSelected
+                          ? 'bg-primary/10 hover:bg-primary/15'
+                          : 'hover:bg-muted/30'
+                          }`}
                       >
                         <td className="p-3 font-mono font-bold text-primary">
                           <div className="flex items-center gap-1.5">
@@ -621,11 +617,10 @@ export function OrdersPage() {
                   <div>
                     <span className="text-muted-foreground">TT Thanh toán:</span>{' '}
                     <span
-                      className={`font-bold ${
-                        selectedOrder.trangThaiThanhToan === 'SUCCESS'
-                          ? 'text-emerald-600'
-                          : 'text-amber-600'
-                      }`}
+                      className={`font-bold ${selectedOrder.trangThaiThanhToan === 'SUCCESS'
+                        ? 'text-emerald-600'
+                        : 'text-amber-600'
+                        }`}
                     >
                       {selectedOrder.trangThaiThanhToan === 'SUCCESS'
                         ? 'Đã thanh toán'
