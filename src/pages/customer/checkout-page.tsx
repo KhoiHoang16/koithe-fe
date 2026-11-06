@@ -16,6 +16,8 @@ import {
   FileText,
   Clock,
   QrCode,
+  Sparkles,
+  Ticket,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -151,9 +153,10 @@ export function CheckoutPage() {
   const selectedThoiGianNhan = watch('thoiGianNhan');
 
   // Tính phí ship: Miễn phí nếu là Đến lấy, hoặc đơn giao hàng >= 150.000₫
-  const isFreeShipDelivery = subtotal >= 150000;
-  const shippingFee = selectedLoaiDonHang !== 'DELIVERY' ? 0 : isFreeShipDelivery ? 0 : 15000;
-  const finalTotal = getTotal(shippingFee);
+  const shippingFee = 0;
+  // Ưu đãi hóa đơn tự động (Happy Hour: đơn từ 200.000₫ giảm 15%, tối đa 50.000₫)
+  const invoiceDiscount = subtotal >= 200000 ? Math.min(50000, Math.round(subtotal * 0.15)) : 0;
+  const finalTotal = Math.max(0, getTotal(shippingFee) - invoiceDiscount);
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (isSubmitting || createdOrderError) return;
@@ -196,10 +199,10 @@ export function CheckoutPage() {
         }
       }
       // Đã đăng nhập: backend tự lấy giỏ của tài khoản. Chỉ guest mới truyền cartToken.
-      const cartToken =
-        !accessToken && typeof localStorage !== 'undefined'
-          ? localStorage.getItem('guest_cart_token')
-          : null;
+      const storedGuestToken =
+        useCartStore.getState().guestCartToken ||
+        (typeof localStorage !== 'undefined' ? localStorage.getItem('guest_cart_token') : null);
+      const cartToken = !accessToken ? (storedGuestToken || undefined) : undefined;
       const serviceType = SERVICE_TYPE_MAP[data.loaiDonHang] ?? 'MANG_VE';
 
       // Tạo chuỗi thông tin nhận hàng lưu vào backend
@@ -218,6 +221,7 @@ export function CheckoutPage() {
         tenNguoiNhan: data.khachHangTen,
         soDienThoaiNguoiNhan: data.soDienThoai,
         diaChiGiaoHang: finalDeliveryAddress,
+        voucherCode: appliedVoucher?.maVoucher || undefined,
       });
       createdOrderCode = order.maDonHang || String(order.id);
 
@@ -429,11 +433,6 @@ export function CheckoutPage() {
                         <Label htmlFor="diaChiGiaoHang" className="text-xs font-semibold text-stone-700">
                           Địa chỉ nhận hàng chi tiết *
                         </Label>
-                        {isFreeShipDelivery && (
-                          <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-300 text-[10px] font-bold">
-                            🎉 Miễn phí giao hàng
-                          </Badge>
-                        )}
                       </div>
                       <div className="relative">
                         <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-stone-400" />
@@ -637,16 +636,20 @@ export function CheckoutPage() {
                     <span className="font-semibold text-stone-900">{formatVND(subtotal)}</span>
                   </div>
 
-                  <div className="flex justify-between text-stone-600">
-                    <span>Phí vận chuyển</span>
-                    <span className={`font-semibold ${shippingFee === 0 ? 'text-emerald-700 font-bold' : 'text-stone-900'}`}>
-                      {shippingFee === 0 ? 'Miễn phí' : formatVND(shippingFee)}
-                    </span>
-                  </div>
+                  {invoiceDiscount > 0 && (
+                    <div className="flex justify-between text-emerald-700 font-bold">
+                      <span className="flex items-center gap-1">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-600" /> Ưu đãi hóa đơn (Happy Hour -15%)
+                      </span>
+                      <span>-{formatVND(invoiceDiscount)}</span>
+                    </div>
+                  )}
 
                   {voucherDiscount > 0 && (
                     <div className="flex justify-between text-primary font-bold">
-                      <span>Voucher {appliedVoucher?.maVoucher}</span>
+                      <span className="flex items-center gap-1">
+                        <Ticket className="h-3.5 w-3.5" /> Voucher {appliedVoucher?.maVoucher}
+                      </span>
                       <span>-{formatVND(voucherDiscount)}</span>
                     </div>
                   )}

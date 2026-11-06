@@ -52,8 +52,11 @@ export function CartPage() {
   const [quickAddingId, setQuickAddingId] = useState<number | null>(null);
 
   const subtotal = getSubtotal();
-  const shippingFee = subtotal > 0 ? 15000 : 0;
-  const finalTotal = getTotal(shippingFee);
+  // Miễn phí vận chuyển cho tất cả đơn hàng
+  const shippingFee = 0;
+  // Ưu đãi hóa đơn tự động (Happy Hour: đơn từ 200.000₫ giảm 15%, tối đa 50.000₫)
+  const invoiceDiscount = subtotal >= 200000 ? Math.min(50000, Math.round(subtotal * 0.15)) : 0;
+  const finalTotal = Math.max(0, getTotal(shippingFee) - invoiceDiscount);
 
   // Lấy danh sách sản phẩm gợi ý
   const { data: allProducts } = useQuery({
@@ -461,10 +464,14 @@ export function CartPage() {
                   <span className="font-semibold text-stone-900">{formatVND(subtotal)}</span>
                 </div>
 
-                <div className="flex justify-between text-stone-600 items-baseline">
-                  <span>Phí giao hàng dự kiến</span>
-                  <span className="font-semibold text-stone-900">{formatVND(shippingFee)}</span>
-                </div>
+                {invoiceDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-semibold">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="h-3.5 w-3.5" /> Ưu đãi hóa đơn (Happy Hour -15%)
+                    </span>
+                    <span>-{formatVND(invoiceDiscount)}</span>
+                  </div>
+                )}
 
                 {voucherDiscount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-semibold">

@@ -60,11 +60,9 @@ export const useCartStore = create<CartState>()(
       hydrate: async () => {
         try {
           const cart = await cartApi.getCurrent();
-          const token = readGuestCartToken();
-          if (!cart.cartToken && token) {
-            localStorage.removeItem('guest_cart_token');
-          }
-          set({ items: mapCartItems(cart), guestCartToken: readGuestCartToken() });
+                    if (cart.cartToken && typeof localStorage !== 'undefined') { localStorage.setItem('guest_cart_token', cart.cartToken); }
+          if (cart.cartToken && typeof localStorage !== 'undefined') { localStorage.setItem('guest_cart_token', cart.cartToken); }
+        set({ items: mapCartItems(cart), guestCartToken: cart.cartToken || readGuestCartToken() });
         } catch {
           set({ guestCartToken: readGuestCartToken() });
         }
@@ -79,13 +77,15 @@ export const useCartStore = create<CartState>()(
           note: item.note,
           toppings: item.toppings.map((topping) => ({ toppingId: topping.id, quantity: 1 })),
         });
-        set({ items: mapCartItems(cart), guestCartToken: readGuestCartToken() });
+        if (cart.cartToken && typeof localStorage !== 'undefined') { localStorage.setItem('guest_cart_token', cart.cartToken); }
+        set({ items: mapCartItems(cart), guestCartToken: cart.cartToken || readGuestCartToken() });
       },
 
       removeItem: async (id) => {
         await cartApi.removeItem(Number(id));
         const cart = await cartApi.getCurrent();
-        set({ items: mapCartItems(cart), guestCartToken: readGuestCartToken() });
+        if (cart.cartToken && typeof localStorage !== 'undefined') { localStorage.setItem('guest_cart_token', cart.cartToken); }
+        set({ items: mapCartItems(cart), guestCartToken: cart.cartToken || readGuestCartToken() });
       },
 
       updateQuantity: async (id, delta) => {
@@ -98,7 +98,8 @@ export const useCartStore = create<CartState>()(
           await cartApi.updateItem(Number(id), { quantity: newQuantity });
         }
         const cart = await cartApi.getCurrent();
-        set({ items: mapCartItems(cart), guestCartToken: readGuestCartToken() });
+        if (cart.cartToken && typeof localStorage !== 'undefined') { localStorage.setItem('guest_cart_token', cart.cartToken); }
+        set({ items: mapCartItems(cart), guestCartToken: cart.cartToken || readGuestCartToken() });
       },
 
       clearCart: async () => {

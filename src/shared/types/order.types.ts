@@ -91,6 +91,7 @@ export interface CreateOrderRequest {
   tenNguoiNhan?: string;
   soDienThoaiNguoiNhan?: string;
   diaChiGiaoHang?: string;
+  voucherCode?: string;
 }
 
 export interface OrderStatusHistory {
